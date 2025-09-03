@@ -11,6 +11,8 @@ import { Share } from "react-native"
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
+import BottomSheetComments from './bottomsheet/BottomSheetComments';
+import { useRef } from 'react';
 
 
 
@@ -28,6 +30,8 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
     const [mute, setmute] = React.useState(false);
 
     const video = React.useRef(null);
+
+    const commentSheetRef = useRef(null);
 
     return (
         <View style={{ borderBottomWidth: 1, borderBottomColor: colors.border, marginHorizontal: -15 }}>
@@ -238,79 +242,81 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
                                     style={{ width: 22, height: 22, resizeMode: 'contain', tintColor: colors.title }}
                                     source={IMAGES.comment}
                                 />
+                                {/* <BottomSheetComments ref={commentSheetRef} /> */}
+
                                 {/* <Text style={[GlobalStyleSheet.postlike, { color: colors.title }]}>{comment}</Text> */}
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity
-  onPress={async () => {
-    try {
-      if (postimage && postimage.length > 0) {
-        const imageUrl = postimage[0].image; // first image of post
-        const fileUri = FileSystem.cacheDirectory + "sharedImage.jpg";
+                            onPress={async () => {
+                                try {
+                                    if (postimage && postimage.length > 0) {
+                                        const imageUrl = postimage[0].image; // first image of post
+                                        const fileUri = FileSystem.cacheDirectory + "sharedImage.jpg";
 
-        // Download image to local cache
-        const { uri } = await FileSystem.downloadAsync(imageUrl, fileUri);
+                                        // Download image to local cache
+                                        const { uri } = await FileSystem.downloadAsync(imageUrl, fileUri);
 
-        // Share only if available
-        if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(uri, {
-            mimeType: "image/jpeg",
-            dialogTitle: `Share ${name}'s post`,
-            UTI: "public.jpeg", // for iOS
-          });
-        } else {
-          alert("Sharing is not available on this device");
-        }
-      } else {
-        alert("No image to share");
-      }
-    } catch (error) {
-      console.log("Error sharing image:", error);
-    }
-  }}
->
-  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-    <Image
-      style={{ width: 24, height: 24, resizeMode: 'contain', tintColor: colors.title }}
-      source={IMAGES.share}
-    />
-  </View>
-</TouchableOpacity>
+                                        // Share only if available
+                                        if (await Sharing.isAvailableAsync()) {
+                                            await Sharing.shareAsync(uri, {
+                                                mimeType: "image/jpeg",
+                                                dialogTitle: `Share ${name}'s post`,
+                                                UTI: "public.jpeg", // for iOS
+                                            });
+                                        } else {
+                                            alert("Sharing is not available on this device");
+                                        }
+                                    } else {
+                                        alert("No image to share");
+                                    }
+                                } catch (error) {
+                                    console.log("Error sharing image:", error);
+                                }
+                            }}
+                        >
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Image
+                                    style={{ width: 24, height: 24, resizeMode: 'contain', tintColor: colors.title }}
+                                    source={IMAGES.share}
+                                />
+                            </View>
+                        </TouchableOpacity>
 
-<TouchableOpacity
-  onPress={async () => {
-    try {
-      if (postimage && postimage.length > 0) {
-        const imageUrl = postimage[0].image; // first image of post
-        const fileUri = FileSystem.cacheDirectory + "downloadedImage.jpg";
+                        <TouchableOpacity
+                            onPress={async () => {
+                                try {
+                                    if (postimage && postimage.length > 0) {
+                                        const imageUrl = postimage[0].image; // first image of post
+                                        const fileUri = FileSystem.cacheDirectory + "downloadedImage.jpg";
 
-        // Download image to local cache
-        const { uri } = await FileSystem.downloadAsync(imageUrl, fileUri);
+                                        // Download image to local cache
+                                        const { uri } = await FileSystem.downloadAsync(imageUrl, fileUri);
 
-        // Request permission
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-        if (status === 'granted') {
-          const asset = await MediaLibrary.createAssetAsync(uri);
-          await MediaLibrary.createAlbumAsync("MyApp", asset, false); // optional: create album
-          alert("Image saved to gallery!");
-        } else {
-          alert("Permission denied to save image.");
-        }
-      } else {
-        alert("No image to download");
-      }
-    } catch (error) {
-      console.log("Error downloading image:", error);
-    }
-  }}
->
-  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-    <Image
-      style={{ width: 28, height: 28, resizeMode: 'contain', tintColor: colors.title }}
-      source={IMAGES.download} // add your download icon in IMAGES
-    />
-  </View>
-</TouchableOpacity>
+                                        // Request permission
+                                        const { status } = await MediaLibrary.requestPermissionsAsync();
+                                        if (status === 'granted') {
+                                            const asset = await MediaLibrary.createAssetAsync(uri);
+                                            await MediaLibrary.createAlbumAsync("MyApp", asset, false); // optional: create album
+                                            alert("Image saved to gallery!");
+                                        } else {
+                                            alert("Permission denied to save image.");
+                                        }
+                                    } else {
+                                        alert("No image to download");
+                                    }
+                                } catch (error) {
+                                    console.log("Error downloading image:", error);
+                                }
+                            }}
+                        >
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Image
+                                    style={{ width: 28, height: 28, resizeMode: 'contain', tintColor: colors.title }}
+                                    source={IMAGES.download} // add your download icon in IMAGES
+                                />
+                            </View>
+                        </TouchableOpacity>
 
 
 
@@ -348,6 +354,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
                     </View>
                     <Text style={{ ...FONTS.fontRegular, color: theme.dark ? 'rgba(255,255,255,0.4)' : '#475A77', fontSize: 13 }}>{posttag}</Text>
                 </View> */}
+               
             </View>
         </View>
     )

@@ -13,7 +13,7 @@ const Categories: React.FC = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch("http://192.168.1.77:5000/api/all/tags");
+        const res = await fetch("http://192.168.1.4:5000/api/all/tags");
         const data = await res.json();
         console.log("Categories API Response:", data);
 

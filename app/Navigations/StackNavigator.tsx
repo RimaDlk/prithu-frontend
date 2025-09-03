@@ -86,11 +86,23 @@ import ChatRoomVideoCall from '../screens/chatrooms/ChatRoomVideoCall';
 import ChatRoomVideoCallON from '../screens/chatrooms/ChatRoomVideoCallON';
 import SplashVideo from '../screens/auth/SplashScreen';
 import OnboardingScreen from '../screens/auth/OnboardingScreen';
+import LanguageScreen from '../screens/auth/LanguageScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TermsOfUse from '../screens/auth/TermsOfUse';
 import SubscriptionScreen from '../screens/settings/Subscription/Subscription';
 import SubscriptionPlans from '../screens/settings/Subscription/OSubscription';
 import InviteFriends from '../screens/settings/Invite Friends/InviteFriend';
+import AccountType from '../screens/settings/Account type and tools/AccountType';
+import CreatorAccount from '../screens/settings/Account type and tools/CreatorAccount';
+import PersonalAccount from '../screens/settings/Account type and tools/PersonalAccount';
+import Categories from '../screens/settings/Account type and tools/Categories';
+import SwitchAccountLogin from '../screens/settings/Account type and tools/SwitchAccountLogin';
+import feed from '../screens/settings/Feed/feed';
+import AppLanguage from '../screens/settings/Feed/AppLanguage';
+import FeedLanguage from '../screens/settings/Feed/FeedLanguage';
+import FeedScreen from '../screens/auth/FeedScreen';
+
+// import BottomSheetComments from '../components/bottomsheet/BottomSheetComments';
 // import { View } from 'react-native-reanimated/lib/typescript/Animated';
 // import { ActivityIndicator } from 'react-native-paper';
 
@@ -225,6 +237,16 @@ const StackNavigator = () => {
                 <Stack.Screen name="Music2" component={Music2} />
                 <Stack.Screen name="AllSong" component={AllSong} />
                 <Stack.Screen name="SavedMusic" component={SavedMusic} />
+                <Stack.Screen name="AccountType" component={AccountType} />
+                <Stack.Screen name="CreatorAccount" component={CreatorAccount} />
+                <Stack.Screen name='PersonalAccount' component={PersonalAccount} />
+                <Stack.Screen name='Categories' component={Categories} />
+                <Stack.Screen name='SwitchAccountLogin' component={SwitchAccountLogin} />
+                <Stack.Screen name='feed' component={feed}/>
+                <Stack.Screen name='AppLanguage' component={AppLanguage} />
+                <Stack.Screen name='FeedLanguage' component={FeedLanguage}/>
+                <Stack.Screen name='LanguageScreen' component={LanguageScreen}/>
+                <Stack.Screen name='FeedScreen' component={FeedScreen}/>
             
             </Stack.Navigator>
         </SafeAreaView>

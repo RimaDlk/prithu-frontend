@@ -51,7 +51,9 @@ const Header = (props:any) => {
                 ?
                 <TouchableOpacity
                     style={{paddingRight:10}}
-                    onPress={() => navigation.navigate('Nextpage')}
+                    // onPress={() => navigation.navigate('Nextpage')}
+                     onPress={onPress} 
+
                 >
                     <Text style={{...FONTS.font,...FONTS.fontRegular,color:colors.primary}}>next</Text> 
                 </TouchableOpacity>

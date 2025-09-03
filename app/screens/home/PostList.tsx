@@ -34,7 +34,7 @@ const PostList = forwardRef((props: any, ref: any) => {
   const fetchPosts = async () => {
     try {
       const res = await axios.get(
-        'http://192.168.1.77:5000/api/all/feeds'
+        'http://192.168.1.4:5000/api/all/feeds'
       );
       const feeds = res.data.feeds || [];
       console.log(feeds);
@@ -128,7 +128,9 @@ const PostList = forwardRef((props: any, ref: any) => {
         <View
           key={post._id}
           onLayout={handleBoxLayout(post._id)}
-          style={{ height: windowHeight, width: '100%' }}
+          style={{ height: windowHeight,
+                   width: '100%',
+             }}
         >
           <MemoPostCard
             id={post._id}

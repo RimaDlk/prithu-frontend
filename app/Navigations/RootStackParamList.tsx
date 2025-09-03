@@ -117,4 +117,16 @@ export type RootStackParamList = {
     Subcribe:undefined;
     PlanSubcribe:undefined;
     Invite:undefined;
+    AccountType: undefined;
+    BottomSheetComments: undefined;
+    CreatorAccount: undefined;
+    PersonalAccount: undefined;
+    Categories: undefined;
+    SwitchAccountLogin: undefined;
+    feed: undefined;
+    AppLanguage: undefined;
+    FeedLanguage: undefined;
+    LanguageScreen: undefined;
+    FeedScreen: undefined;
+
 };

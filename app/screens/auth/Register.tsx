@@ -74,7 +74,7 @@ const Register = ({ navigation } : RegisterScreenProps) => {
         }
 
         try {
-            const res = await fetch("http://192.168.1.77:5000/api/auth/user/otp-send", {
+            const res = await fetch("http://192.168.1.4:5000/api/auth/user/otp-send", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email })
@@ -84,6 +84,7 @@ const Register = ({ navigation } : RegisterScreenProps) => {
 
             if (res.ok) {
                 setOtpSent(true);
+                console.log()
                 Alert.alert("Success", "Successfully the OTP is sent");
             } else {
                 Alert.alert("Error", data.message || "Failed to send OTP");
@@ -104,7 +105,7 @@ const Register = ({ navigation } : RegisterScreenProps) => {
     }
 
     try {
-        const res = await fetch("http://192.168.1.77:5000/api/auth/new/user/verify-otp", {
+        const res = await fetch("http://192.168.1.4:5000/api/auth/new/user/verify-otp", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, otp })
@@ -141,7 +142,7 @@ const Register = ({ navigation } : RegisterScreenProps) => {
              }
 
           try {
-            const res = await fetch("http://192.168.1.77:5000/api/auth/user/register", { 
+            const res = await fetch("http://192.168.1.4:5000/api/auth/user/register", { 
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, email, password, otp })

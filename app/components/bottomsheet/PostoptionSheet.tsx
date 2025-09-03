@@ -66,9 +66,9 @@ const PostoptionSheet = (props:any, ref:any) => {
                 <TouchableOpacity style={GlobalStyleSheet.TouchableOpacity}>
                     <Image
                         style={[GlobalStyleSheet.image,{tintColor:colors.title}]}
-                        source={IMAGES.share2}
+                        source={IMAGES.eyeclose}
                     />
-                    <Text style={[GlobalStyleSheet.text,{color:colors.title}]}>Share</Text>
+                    <Text style={[GlobalStyleSheet.text,{color:colors.title}]}>Not Intrested</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={GlobalStyleSheet.TouchableOpacity}>
                     <Image

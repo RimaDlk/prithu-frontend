@@ -48,7 +48,7 @@ const EditProfile = () => {
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) return;
 
-      const res = await fetch(`http://192.168.1.77:5000/api/get/profile/detail/${userId}`);
+      const res = await fetch(`http://192.168.1.4:5000/api/get/profile/detail/${userId}`);
       const data = await res.json();
 
       if (res.ok && data.profileSetting) {
@@ -70,7 +70,7 @@ const EditProfile = () => {
         // Fix image path
         if (profile.profileAvatar) {
           const fixedPath = profile.profileAvatar.replace(/\\/g, '/');
-          setImageUrl(`http://192.168.1.77:5000/${fixedPath}`);
+          setImageUrl(`http://192.168.1.4:5000/${fixedPath}`);
         } else {
           setImageUrl('');
         }
@@ -123,9 +123,9 @@ const EditProfile = () => {
       formData.append('phoneNumber', phoneNumber);
       formData.append('maritalStatus', maritalStatus ? 'true' : 'false');
       formData.append('language', language);
-      formData.append('role', "User");
+      formData.append('role', "Creator");
       formData.append('userName', username)
-      formData.append('roleRef', "User");
+      formData.append('roleRef', "Creator");
       if (dob) formData.append('dateOfBirth', dob.toISOString());
 
       if (imageUrl) {
@@ -139,7 +139,7 @@ const EditProfile = () => {
       }
 
       const res = await fetch(
-        `http://192.168.1.77:5000/api/profile/detail/update/${userId}`,
+        `http://192.168.1.4:5000/api/profile/detail/update/${userId}`,
         {
           method: 'POST',
           headers: {

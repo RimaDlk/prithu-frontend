@@ -36,7 +36,7 @@ const Login = ({ navigation } : LoginScreenProps) => {
         setLoading(true);
 
         try {
-            const res = await fetch("http://192.168.1.77:5000/api/auth/user/login", {
+            const res = await fetch("http://192.168.1.4:5000/api/auth/user/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ identifier:email, password })
@@ -51,7 +51,8 @@ const Login = ({ navigation } : LoginScreenProps) => {
                 await AsyncStorage.setItem('userToken', data.token);
                 await AsyncStorage.setItem('userId', data.user.userId);
                 // await AsyncStorage.setItem('userData', JSON.stringify(data.creator));
-                navigation.navigate('DrawerNavigation', {screen : 'Home'});
+                // navigation.navigate('DrawerNavigation', {screen : 'Home'});
+                navigation.navigate('LanguageScreen');
             } else {
                 alert(data.message || "Invalid email or password");
                 setLoading(false);
@@ -115,7 +116,7 @@ const Login = ({ navigation } : LoginScreenProps) => {
                   <Text style={GlobalStyleSheet.forndescription}>Please enter your credentials to access your account and detail</Text>
                 </View>
                 <View style={[GlobalStyleSheet.loginarea, { backgroundColor: colors.card }]}>
-                  <Text style={[GlobalStyleSheet.inputlable, { color: colors.title }]}>Email</Text>
+                  <Text style={[GlobalStyleSheet.inputlable, { color: colors.title }]}>Email/Username</Text>
                   <View
                     style={[
                       GlobalStyleSheet.inputBox, {

@@ -5,10 +5,13 @@ import { COLORS, FONTS, IMAGES } from '../../constants/theme';
 import { useTheme } from '@react-navigation/native';
 import { GlobalStyleSheet } from '../../constants/styleSheet';
 import { TextInput } from 'react-native-gesture-handler';
+// import { TextInput } from 'react-native';
 import Collapsible from 'react-native-collapsible';
 import LikeBtn from '../../components/likebtn/LikeBtn';
 import { useNavigation } from '@react-navigation/native';
 import ChatoptionSheet from '../../components/bottomsheet/ChatoptionSheet';
+// import Item from './CommentItem'; // ✅ split your single comment item for reuse
+// import { Comment } from './mockComments'; // ✅ your comment array
 
 const Comment = [
     {

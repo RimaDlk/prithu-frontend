@@ -128,7 +128,7 @@ const Profile = ({ navigation } : ProfileScreenProps) => {
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) return;
 
-      const res = await fetch(`http://192.168.1.77:5000/api/get/profile/detail/${userId}`);
+      const res = await fetch(`http://192.168.1.4:5000/api/get/profile/detail/${userId}`);
       const data = await res.json();
 
       if (res.ok && data.profileSetting) {
@@ -136,7 +136,7 @@ const Profile = ({ navigation } : ProfileScreenProps) => {
 
         // Fix image path
         const fixedAvatar = profileData.profileAvatar
-          ? `http://192.168.1.77:5000/${profileData.profileAvatar.replace(/\\/g, '/')}`
+          ? `http://192.168.1.4:5000/${profileData.profileAvatar.replace(/\\/g, '/')}`
           : '';
 
         setProfile({
@@ -182,25 +182,34 @@ const Profile = ({ navigation } : ProfileScreenProps) => {
   const theme = useTheme();
   const { colors } : {colors : any} = theme;
 
-  const onShare = async () => {
-    try {
-      const result = await Share.share({
-        message:
-          'Share your profile link here.',
-      });
-      if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          // shared with activity type of result.activityType
-        } else {
-          // shared
-        }
-      } else if (result.action === Share.dismissedAction) {
-        // dismissed
-      }
-    } catch (error :any) {
-      Alert.alert(error.message);
+const onShare = async () => {
+  try {
+    const userId = await AsyncStorage.getItem('userId'); // get the current logged-in userId
+    if (!userId) {
+      Alert.alert("Error", "User not found");
+      return;
     }
-  };
+
+    // Create a proper profile URL (replace with your deployed domain later)
+    const profileUrl = `http://192.168.1.4:5000/profile/${userId}`;
+
+    const result = await Share.share({
+      message: `Check out this profile: ${profileUrl}`,
+    });
+
+    if (result.action === Share.sharedAction) {
+      if (result.activityType) {
+        // shared with activity type
+      } else {
+        // shared
+      }
+    } else if (result.action === Share.dismissedAction) {
+      // dismissed
+    }
+  } catch (error: any) {
+    Alert.alert(error.message);
+  }
+};
 
 
   return (
@@ -327,7 +336,7 @@ const Profile = ({ navigation } : ProfileScreenProps) => {
                 style={[{ width: 16, height: 16, tintColor: '#475A77' },currentIndex == 0 && {tintColor:COLORS.primary}]}
                 source={IMAGES.profilepic}
               />
-              <Text style={[{ ...FONTS.fontMedium, fontSize: 14, color:'#475A77', marginLeft: 5 },currentIndex == 0 && { color: COLORS.primary }]}>Save Post</Text>
+              <Text style={[{ ...FONTS.fontMedium, fontSize: 14, color:'#475A77', marginLeft: 5 },currentIndex == 0 && { color: COLORS.primary }]}> Post</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => onPressTouch(1)}
@@ -336,7 +345,7 @@ const Profile = ({ navigation } : ProfileScreenProps) => {
                 style={[{ width: 16, height: 16, tintColor: '#475A77' }, currentIndex == 1 && { tintColor: COLORS.primary }]}
                 source={IMAGES.reels}
               />
-              <Text style={[{ ...FONTS.fontMedium, fontSize: 14, color: '#475A77', marginLeft: 5 }, currentIndex == 1 && { color: COLORS.primary }]}>Save Reels</Text>
+              <Text style={[{ ...FONTS.fontMedium, fontSize: 14, color: '#475A77', marginLeft: 5 }, currentIndex == 1 && { color: COLORS.primary }]}> Reels</Text>
             </TouchableOpacity>
             <Animated.View
               style={{

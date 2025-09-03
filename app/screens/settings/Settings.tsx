@@ -12,12 +12,21 @@ import { RootStackParamList } from '../../Navigations/RootStackParamList';
 type SettingsScreenProps = StackScreenProps<RootStackParamList, 'Settings'>;
 
 const SettingData = [
+     {
+        id: "section1",
+        image: IMAGES.user,
+        // section: true,
+        text: "Account Type",
+        navigate: 'AccountType'
+
+    },
     {
         id: "1",
         image: IMAGES.bell,
         text: "Notification",
         navigate: 'SettingNotification'
     },
+     
     {
         id: "2",
         image: IMAGES.verified,
@@ -42,39 +51,46 @@ const SettingData = [
         text: "Save",
         navigate: 'Save'
     },
-    {
+     {
         id: "6",
+        image: IMAGES.components,
+        text: "Feed",
+        navigate: 'feed'
+    },
+
+    {
+        id: "7",
         image: IMAGES.theme,
         text: "Theme",
         navigate: 'Theme'
     },
     {
-        id: "7",
+        id: "8",
         image: IMAGES.payment,
         text: "Payment",
         navigate: 'Theme'
     },
     {
-        id: "8",
+        id: "9",
         image: IMAGES.Referrals,
         text: "Referrals Dashboard",
         navigate: 'Theme'
     },
     {
-        id: "9",
+        id: "10",
         image: IMAGES.Sub,
         text: "Subscription",
         navigate: 'Subcribe'
     },
     {
-        id: "10",
+        id: "11",
         image: IMAGES.Invite,
         text: "Invite Friends",
         navigate: 'Invite'
     },
     
     {
-        id: "11",
+        id: "12",
         image: IMAGES.logout,
         text: "Log out",
         isLogout: true
@@ -101,7 +117,7 @@ const Settings = ({ navigation }: SettingsScreenProps) => {
                     onPress: async () => {
                         try {
                             // Clear all stored user data
-                            await AsyncStorage.multiRemove(['userToken', 'userId']);
+                            await AsyncStorage.multiRemove(['userToken', 'userId',"AppLanguage","FeedLanguage"]);
                             // Navigate to login screen
                             navigation.reset({
                                 index: 0,

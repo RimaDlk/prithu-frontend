@@ -36,7 +36,7 @@ const Login = ({ navigation } : LoginScreenProps) => {
         setLoading(true);
 
         try {
-            const res = await fetch("http://192.168.1.4:5000/api/auth/user/login", {
+            const res = await fetch("http://192.168.1.77:5000/api/auth/user/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ identifier:email, password })
@@ -49,7 +49,7 @@ const Login = ({ navigation } : LoginScreenProps) => {
                 // ✅ if backend says success → go to homepage
                 // Store token and user data
                 await AsyncStorage.setItem('userToken', data.token);
-                await AsyncStorage.setItem('userId', data.user.userId);
+                // await AsyncStorage.setItem('userId', data.user.userId);
                 // await AsyncStorage.setItem('userData', JSON.stringify(data.creator));
                 // navigation.navigate('DrawerNavigation', {screen : 'Home'});
                 navigation.navigate('LanguageScreen');

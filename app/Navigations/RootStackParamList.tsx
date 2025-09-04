@@ -128,5 +128,6 @@ export type RootStackParamList = {
     FeedLanguage: undefined;
     LanguageScreen: undefined;
     FeedScreen: undefined;
+    Friend:undefined;
 
 };

@@ -74,7 +74,7 @@ const SettingData = [
         id: "9",
         image: IMAGES.Referrals,
         text: "Referrals Dashboard",
-        navigate: 'Theme'
+        navigate: 'Friend'
     },
     {
         id: "10",
@@ -117,7 +117,7 @@ const Settings = ({ navigation }: SettingsScreenProps) => {
                     onPress: async () => {
                         try {
                             // Clear all stored user data
-                            await AsyncStorage.multiRemove(['userToken', 'userId',"AppLanguage","FeedLanguage"]);
+                            await AsyncStorage.multiRemove(['userToken','userId',"AppLanguage","FeedLanguage"]);
                             // Navigate to login screen
                             navigation.reset({
                                 index: 0,

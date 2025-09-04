@@ -17,12 +17,12 @@ const StoryList = () => {
         const userId = await AsyncStorage.getItem('userId');
         if (!userId) return;
 
-        const res = await fetch(`http://192.168.1.4:5000/api/get/profile/detail/${userId}`);
+        const res = await fetch(`http://192.168.1.77:5000/api/get/profile/detail/${userId}`);
         const data = await res.json();
 
         if (res.ok && data.profileSetting) {
           const avatar = data.profileSetting.profileAvatar
-            ? { uri: `http://192.168.1.4:5000/${data.profileSetting.profileAvatar.replace(/\\/g, '/')}` }
+            ? { uri: `http://192.168.1.77:5000/${data.profileSetting.profileAvatar.replace(/\\/g, '/')}` }
             : IMAGES.profile;
           setProfileUrl(avatar);
         }

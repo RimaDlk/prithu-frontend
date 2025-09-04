@@ -123,20 +123,26 @@ const Profile = ({ navigation } : ProfileScreenProps) => {
     profileAvatar: '',
   });
 
-   const fetchProfile = async () => {
+  const fetchProfile = async () => {
     try {
-      const userId = await AsyncStorage.getItem('userId');
-      if (!userId) return;
+      const userToken = await AsyncStorage.getItem('userToken');
+      if (!userToken) {
+        Alert.alert('Error', 'User not authenticated');
+        return;
+      }
 
-      const res = await fetch(`http://192.168.1.4:5000/api/get/profile/detail/${userId}`);
+      const res = await fetch('http://192.168.1.77:5000/api/get/profile/detail', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      });
       const data = await res.json();
 
       if (res.ok && data.profileSetting) {
         const profileData = data.profileSetting;
-
-        // Fix image path
         const fixedAvatar = profileData.profileAvatar
-          ? `http://192.168.1.4:5000/${profileData.profileAvatar.replace(/\\/g, '/')}`
+          ? `http://192.168.1.77:5000/${profileData.profileAvatar.replace(/\\/g, '/')}`
           : '';
 
         setProfile({
@@ -148,16 +154,18 @@ const Profile = ({ navigation } : ProfileScreenProps) => {
         });
       } else {
         console.log('Error fetching profile:', data.message);
+        Alert.alert('Error', data.message || 'Failed to fetch profile');
       }
     } catch (err) {
       console.error('Fetch profile error:', err);
-      Alert.alert('Error fetching profile');
+      Alert.alert('Error', 'Failed to fetch profile');
     }
   };
 
   useEffect(() => {
     fetchProfile();
   }, []);
+
 
 
 
@@ -191,7 +199,7 @@ const onShare = async () => {
     }
 
     // Create a proper profile URL (replace with your deployed domain later)
-    const profileUrl = `http://192.168.1.4:5000/profile/${userId}`;
+    const profileUrl = `http://192.168.1.77:5000/profile/${userId}`;
 
     const result = await Share.share({
       message: `Check out this profile: ${profileUrl}`,

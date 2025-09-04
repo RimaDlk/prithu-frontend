@@ -101,6 +101,7 @@ import feed from '../screens/settings/Feed/feed';
 import AppLanguage from '../screens/settings/Feed/AppLanguage';
 import FeedLanguage from '../screens/settings/Feed/FeedLanguage';
 import FeedScreen from '../screens/auth/FeedScreen';
+import ReferralDashboard from '../screens/settings/Referrals/ReferralDashboard';
 
 // import BottomSheetComments from '../components/bottomsheet/BottomSheetComments';
 // import { View } from 'react-native-reanimated/lib/typescript/Animated';
@@ -204,6 +205,8 @@ const StackNavigator = () => {
                 <Stack.Screen name="Save" component={Save} />
                 <Stack.Screen name="Savepost" component={SavePost} />
                 <Stack.Screen name="SaveReels" component={SaveReels} />
+                 <Stack.Screen name="Friend" component={ReferralDashboard} />
+
 
                 <Stack.Screen name="Components" component={Components} />
                 <Stack.Screen name="Accordion" component={AccordionScreen} />

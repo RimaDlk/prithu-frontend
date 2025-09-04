@@ -20,20 +20,20 @@ import { Picker } from '@react-native-picker/picker';
 
 const EditProfile = () => {
   const theme = useTheme();
-  const { colors }: { colors: any } = theme;
+  const { colors } = theme;
 
-  const [imageUrl, setImageUrl] = useState<string>('');
+  const [imageUrl, setImageUrl] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [maritalStatus, setMaritalStatus] = useState(false);
   const [language, setLanguage] = useState('en');
-  const [dob, setDob] = useState<Date | null>(null);
+  const [dob, setDob] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Format date to YYYY-MM-DD
-  const formatDate = (date: Date | null) => {
+  const formatDate = (date) => {
     if (!date) return '';
     const d = new Date(date);
     const year = d.getFullYear();
@@ -45,10 +45,18 @@ const EditProfile = () => {
   // Fetch profile detail from server
   const fetchProfileDetail = async () => {
     try {
-      const userId = await AsyncStorage.getItem('userId');
-      if (!userId) return;
+      const userToken = await AsyncStorage.getItem('userToken');
+      if (!userToken) {
+        console.log('No token found');
+        return;
+      }
 
-      const res = await fetch(`http://192.168.1.4:5000/api/get/profile/detail/${userId}`);
+      const res = await fetch('http://192.168.1.77:5000/api/get/profile/detail', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      });
       const data = await res.json();
 
       if (res.ok && data.profileSetting) {
@@ -70,7 +78,7 @@ const EditProfile = () => {
         // Fix image path
         if (profile.profileAvatar) {
           const fixedPath = profile.profileAvatar.replace(/\\/g, '/');
-          setImageUrl(`http://192.168.1.4:5000/${fixedPath}`);
+          setImageUrl(`http://192.168.1.77:5000/${fixedPath}`);
         } else {
           setImageUrl('');
         }
@@ -111,9 +119,9 @@ const EditProfile = () => {
 
   const handleSave = async () => {
     try {
-      const userId = await AsyncStorage.getItem('userId');
-      if (!userId) {
-        alert('User not found, please login again');
+      const userToken = await AsyncStorage.getItem('userToken');
+      if (!userToken) {
+        alert('User not authenticated, please login again');
         return;
       }
 
@@ -123,9 +131,9 @@ const EditProfile = () => {
       formData.append('phoneNumber', phoneNumber);
       formData.append('maritalStatus', maritalStatus ? 'true' : 'false');
       formData.append('language', language);
-      formData.append('role', "Creator");
-      formData.append('userName', username)
-      formData.append('roleRef', "Creator");
+      formData.append('role', 'Creator');
+      formData.append('userName', username);
+      formData.append('roleRef', 'Creator');
       if (dob) formData.append('dateOfBirth', dob.toISOString());
 
       if (imageUrl) {
@@ -135,24 +143,22 @@ const EditProfile = () => {
           uri: imageUrl,
           name: filename || 'profile.jpg',
           type: `image/${fileType || 'jpg'}`,
-        } as any);
+        });
       }
 
-      const res = await fetch(
-        `http://192.168.1.4:5000/api/profile/detail/update/${userId}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-          body: formData,
-        }
-      );
+      const res = await fetch('http://192.168.1.77:5000/api/profile/detail/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${userToken}`,
+        },
+        body: formData,
+      });
 
       const data = await res.json();
       if (res.ok) {
         alert('Profile updated successfully!');
-        fetchProfileDetail(); // reload updated data
+        fetchProfileDetail(); // Reload updated data
       } else {
         console.error('Error updating profile:', data);
         alert(data.message || 'Update failed');
@@ -200,7 +206,7 @@ const EditProfile = () => {
                 >
                   <Image
                     style={{ width: 18, height: 18, resizeMode: 'contain' }}
-                    source={IMAGES.write2}
+                    source={IMAGES.edit2}
                   />
                 </View>
               </View>

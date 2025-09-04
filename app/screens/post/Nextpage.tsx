@@ -135,7 +135,7 @@ const handleSaveSchedule = async () => {
     formData.append("scheduledAt", combinedSchedule.toISOString());
 
     const res = await axios.post(
-      `http://192.168.1.4:5000/api/creator/feed/schedule/${userId}`,
+      `http://192.168.1.77:5000/api/creator/feed/schedule/${userId}`,
       formData,
       {
         headers: { "Content-Type": "multipart/form-data" },
@@ -209,7 +209,7 @@ const handleSaveSchedule = async () => {
     const userId = await AsyncStorage.getItem('userId');
 
     const res = await axios.post(
-      `http://192.168.1.4:5000/api/creator/feed/${userId}`,
+      `http://192.168.1.77:5000/api/creator/feed/${userId}`,
       formData,
       {
         headers: { 'Content-Type': 'multipart/form-data' },

@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import { View, Dimensions, ActivityIndicator } from 'react-native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import PostCard from '../../components/PostCard';
 
 const { height: windowHeight } = Dimensions.get('window');
@@ -30,20 +31,65 @@ const PostList = forwardRef((props: any, ref: any) => {
 
   const boxRefs = useRef<any>({});
 
-  // ✅ Fetch posts
+  // ✅ Fetch posts with token
   const fetchPosts = async () => {
-    try {
-      const res = await axios.get(
-        'http://192.168.1.77:5000/api/all/feeds'
-      );
-      const feeds = res.data.feeds || [];
-      console.log(feeds);
-      const imageFeeds = feeds.filter((item: any) => item.type === 'image');
-      setPosts(imageFeeds);
-    } catch (error) {
-      console.error('Error fetching posts:', error);
+  try {
+    const token = await AsyncStorage.getItem('userToken'); // get token from storage
+    if (!token) {
+      console.warn('No token found, user might not be logged in');
+      return;
     }
-  };
+
+    const res = await axios.get('http://192.168.1.19:5000/api/all/feeds', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const feeds = res.data.feeds || [];
+    console.log('API response:', res.data);
+
+    // Map backend → frontend shape
+    const mappedFeeds = feeds.map((item: any) => ({
+      _id: item.feedId,  
+      creatorUsername: item.userName,
+      creatorAvatar: item.profileAvatar !== "Unknown" ? item.profileAvatar : null,
+      timeAgo: item.timeAgo,
+      contentUrl: item.contentUrl,
+
+      // engagement details
+      likesCount: item.likesCount || 0,
+      commentsCount: item.commentsCount || 0,
+      viewsCount: item.viewsCount || 0,
+      downloadsCount: item.downloadsCount || 0,
+      shareCount: item.shareCount || 0,
+
+      // states
+      isLiked: item.isLiked || false,
+      isSaved: item.isSaved || false,
+
+      // full comments array is already provided by backend
+      comments: item.comments || [],
+
+      // optional values
+      caption: item.caption || "",
+      tags: item.tags || [],
+      background: item.background || "#fff",
+    }));
+
+    // ✅ filter for only images (if you want separate image feed)
+    const imageFeeds = mappedFeeds.filter((item: any) =>
+      item.contentUrl?.match(/\.(jpg|jpeg|png|gif)$/i)
+    );
+
+    // ✅ or if you want both images + videos, remove this filter
+    setPosts(mappedFeeds);
+
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+  }
+};
+
 
   // ✅ Expose methods to parent
   useImperativeHandle(ref, () => ({
@@ -128,9 +174,7 @@ const PostList = forwardRef((props: any, ref: any) => {
         <View
           key={post._id}
           onLayout={handleBoxLayout(post._id)}
-          style={{ height: windowHeight,
-                   width: '100%',
-             }}
+          style={{ height: windowHeight, width: '100%' }}
         >
           <MemoPostCard
             id={post._id}

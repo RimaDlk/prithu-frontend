@@ -131,7 +131,7 @@ const Profile = ({ navigation } : ProfileScreenProps) => {
         return;
       }
 
-      const res = await fetch('http://192.168.1.77:5000/api/get/profile/detail', {
+      const res = await fetch('http://192.168.1.19:5000/api/get/profile/detail', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${userToken}`,
@@ -139,10 +139,10 @@ const Profile = ({ navigation } : ProfileScreenProps) => {
       });
       const data = await res.json();
 
-      if (res.ok && data.profileSetting) {
-        const profileData = data.profileSetting;
+      if (res.ok && data.profile) {
+        const profileData = data.profile;
         const fixedAvatar = profileData.profileAvatar
-          ? `http://192.168.1.77:5000/${profileData.profileAvatar.replace(/\\/g, '/')}`
+          ? `http://192.168.1.19:5000/${profileData.profileAvatar.replace(/\\/g, '/')}`
           : '';
 
         setProfile({
@@ -199,7 +199,7 @@ const onShare = async () => {
     }
 
     // Create a proper profile URL (replace with your deployed domain later)
-    const profileUrl = `http://192.168.1.77:5000/profile/${userId}`;
+    const profileUrl = `http://192.168.1.19:5000/profile/${userId}`;
 
     const result = await Share.share({
       message: `Check out this profile: ${profileUrl}`,

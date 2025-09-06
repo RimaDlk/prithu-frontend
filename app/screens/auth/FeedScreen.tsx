@@ -48,13 +48,36 @@ const FeedScreen: React.FC = () => {
         checkLanguage();
     }, []);
 
-    const handleNext = async () => {
-        if (selectedLang) {
+   const handleNext = async () => {
+    if (selectedLang) {
+        try {
+            // Save locally
             await AsyncStorage.setItem("FeedLanguage", selectedLang);
-            // navigation.navigate("homescreen"); // go to homepage
+
+            // Get token (assuming you store it in AsyncStorage after login)
+            const token = await AsyncStorage.getItem("userToken");
+
+            // Send to backend
+            const response = await fetch("http://192.168.1.19:5000/api/feed/language", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`, // auth middleware expects token
+                },
+                body: JSON.stringify({ language: selectedLang }),
+            });
+
+            const data = await response.json();
+            console.log("Feed language saved:", data);
+
+            // Navigate after success
             navigation.navigate('DrawerNavigation', { screen: 'Home' });
+        } catch (error) {
+            console.error("Error saving feed language:", error);
         }
-    };
+    }
+};
+
 
     if (loading) return null;
 
@@ -89,7 +112,7 @@ const FeedScreen: React.FC = () => {
                     />
                 </TouchableOpacity>
 
-                <Text style={styles.title}>Choose Your App Language</Text>
+                <Text style={styles.title}>Choose Your Feed Language</Text>
             </View>
 
             <FlatList

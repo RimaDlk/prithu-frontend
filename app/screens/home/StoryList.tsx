@@ -10,19 +10,21 @@ const StoryList = () => {
   const { colors }: { colors: any } = theme;
 
   const [profileUrl, setProfileUrl] = useState<any>(IMAGES.profile);
+  const [activeAccountType, setActiveAccountType] = useState<string | null>(null);
 
+  // ✅ Fetch profile avatar
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const userId = await AsyncStorage.getItem('userId');
         if (!userId) return;
 
-        const res = await fetch(`http://192.168.1.77:5000/api/get/profile/detail/${userId}`);
+        const res = await fetch(`http://192.168.1.19:5000/api/get/profile/detail/${userId}`);
         const data = await res.json();
 
         if (res.ok && data.profileSetting) {
           const avatar = data.profileSetting.profileAvatar
-            ? { uri: `http://192.168.1.77:5000/${data.profileSetting.profileAvatar.replace(/\\/g, '/')}` }
+            ? { uri: `http://192.168.1.19:5000/${data.profileSetting.profileAvatar.replace(/\\/g, '/')}` }
             : IMAGES.profile;
           setProfileUrl(avatar);
         }
@@ -34,13 +36,33 @@ const StoryList = () => {
     fetchProfile();
   }, []);
 
+  // ✅ Fetch active account type
+  useEffect(() => {
+    const fetchAccountType = async () => {
+      try {
+        const storedType = await AsyncStorage.getItem('activeAccountType');
+        if (storedType) {
+          setActiveAccountType(storedType);
+        }
+      } catch (error) {
+        console.log('Error fetching account type:', error);
+      }
+    };
+    fetchAccountType();
+  }, []);
+
+  // ✅ Story Data
   const StoryData = [
-    {
-      id: '1',
-      title: 'Add story',
-      image: profileUrl, // ✅ show dynamic profile avatar
-      storyItem: [],
-    },
+    ...(activeAccountType === 'Creator'
+      ? [
+          {
+            id: '1',
+            title: 'Add story',
+            image: profileUrl, // dynamic profile avatar
+            storyItem: [],
+          },
+        ]
+      : []),
     {
       id: '2',
       title: 'Alex Techie',
@@ -67,7 +89,56 @@ const StoryList = () => {
         IMAGES.profilepic9,
       ],
     },
-    { id: '4', title: 'Mia Maven', image: IMAGES.storypic4, storyItem : [ IMAGES.profilepic16, IMAGES.profilepic17, IMAGES.profilepic18, IMAGES.profilepic19, IMAGES.profilepic20, IMAGES.profilepic21, ] }, { id: '5', title: 'Sophia Techie', image: IMAGES.storypic1, storyItem : [ IMAGES.profilepic22, IMAGES.profilepic5, IMAGES.profilepic7, IMAGES.profilepic8, IMAGES.profilepic9, ] }, { id: '6', title: 'Herry Maven', image: IMAGES.profilepic7, storyItem : [ IMAGES.profilepic13, IMAGES.profilepic14, IMAGES.profilepic15, IMAGES.profilepic3, IMAGES.profilepic4, IMAGES.profilepic5, ] }, { id: '7', title: 'Anan Learns', image: IMAGES.profilepic9, storyItem : [ IMAGES.profilepic13, IMAGES.profilepic14, ] }, { id: '8', title: 'David Miten', image: IMAGES.profilepic5, storyItem : [ IMAGES.profilepic1, IMAGES.profilepic2, ] },
+    {
+      id: '4',
+      title: 'Mia Maven',
+      image: IMAGES.storypic4,
+      storyItem: [
+        IMAGES.profilepic16,
+        IMAGES.profilepic17,
+        IMAGES.profilepic18,
+        IMAGES.profilepic19,
+        IMAGES.profilepic20,
+        IMAGES.profilepic21,
+      ],
+    },
+    {
+      id: '5',
+      title: 'Sophia Techie',
+      image: IMAGES.storypic1,
+      storyItem: [
+        IMAGES.profilepic22,
+        IMAGES.profilepic5,
+        IMAGES.profilepic7,
+        IMAGES.profilepic8,
+        IMAGES.profilepic9,
+      ],
+    },
+    {
+      id: '6',
+      title: 'Herry Maven',
+      image: IMAGES.profilepic7,
+      storyItem: [
+        IMAGES.profilepic13,
+        IMAGES.profilepic14,
+        IMAGES.profilepic15,
+        IMAGES.profilepic3,
+        IMAGES.profilepic4,
+        IMAGES.profilepic5,
+      ],
+    },
+    {
+      id: '7',
+      title: 'Anan Learns',
+      image: IMAGES.profilepic9,
+      storyItem: [IMAGES.profilepic13, IMAGES.profilepic14],
+    },
+    {
+      id: '8',
+      title: 'David Miten',
+      image: IMAGES.profilepic5,
+      storyItem: [IMAGES.profilepic1, IMAGES.profilepic2],
+    },
   ];
 
   return (

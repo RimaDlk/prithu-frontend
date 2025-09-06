@@ -42,25 +42,27 @@ const EditProfile = () => {
     return `${year}-${month}-${day}`;
   };
 
-  // Fetch profile detail from server
+ // ✅ Fetch profile detail from server using token
   const fetchProfileDetail = async () => {
     try {
-      const userToken = await AsyncStorage.getItem('userToken');
-      if (!userToken) {
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
         console.log('No token found');
         return;
       }
 
-      const res = await fetch('http://192.168.1.77:5000/api/get/profile/detail', {
+      const res = await fetch('http://192.168.1.19:5000/api/get/profile/detail', {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${userToken}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
-      const data = await res.json();
 
-      if (res.ok && data.profileSetting) {
-        const profile = data.profileSetting;
+      const data = await res.json();
+     console.log(data)
+      if (res.ok && data.profile) {
+        const profile = data.profile;
+
         setDisplayName(profile.displayName || '');
         setUsername(data.userName || '');
         setBio(profile.bio || '');
@@ -68,17 +70,15 @@ const EditProfile = () => {
         setMaritalStatus(profile.maritalStatus === true || profile.maritalStatus === 'true');
         setLanguage(profile.language || 'en');
 
-        // Normalize DOB
         if (profile.dateOfBirth) {
           setDob(new Date(profile.dateOfBirth));
         } else {
           setDob(null);
         }
 
-        // Fix image path
         if (profile.profileAvatar) {
           const fixedPath = profile.profileAvatar.replace(/\\/g, '/');
-          setImageUrl(`http://192.168.1.77:5000/${fixedPath}`);
+          setImageUrl(`http://192.168.1.19:5000/${fixedPath}`);
         } else {
           setImageUrl('');
         }
@@ -117,57 +117,62 @@ const EditProfile = () => {
     }
   };
 
-  const handleSave = async () => {
-    try {
-      const userToken = await AsyncStorage.getItem('userToken');
-      if (!userToken) {
-        alert('User not authenticated, please login again');
-        return;
-      }
+  // ✅ Save profile detail with token
+const handleSave = async () => {
+  try {
+    const token = await AsyncStorage.getItem('userToken');
+    const userId = await AsyncStorage.getItem('userId');  // ✅ store this after login
+    const accountId = await AsyncStorage.getItem('accountId'); // ✅ same here
 
-      const formData = new FormData();
-      formData.append('displayName', displayName);
-      formData.append('bio', bio);
-      formData.append('phoneNumber', phoneNumber);
-      formData.append('maritalStatus', maritalStatus ? 'true' : 'false');
-      formData.append('language', language);
-      formData.append('role', 'Creator');
-      formData.append('userName', username);
-      formData.append('roleRef', 'Creator');
-      if (dob) formData.append('dateOfBirth', dob.toISOString());
-
-      if (imageUrl) {
-        const filename = imageUrl.split('/').pop();
-        const fileType = filename?.split('.').pop();
-        formData.append('file', {
-          uri: imageUrl,
-          name: filename || 'profile.jpg',
-          type: `image/${fileType || 'jpg'}`,
-        });
-      }
-
-      const res = await fetch('http://192.168.1.77:5000/api/profile/detail/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${userToken}`,
-        },
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        alert('Profile updated successfully!');
-        fetchProfileDetail(); // Reload updated data
-      } else {
-        console.error('Error updating profile:', data);
-        alert(data.message || 'Update failed');
-      }
-    } catch (err) {
-      console.error('Save error:', err);
-      alert('Something went wrong while saving');
+    if (!token) {
+      alert('User not authenticated, please login again');
+      return;
     }
-  };
+
+    const formData = new FormData();
+    if (userId) formData.append('userId', userId);
+    if (accountId) formData.append('accountId', accountId)
+    formData.append('displayName', displayName);
+    formData.append('bio', bio);
+    formData.append('phoneNumber', phoneNumber);
+    formData.append('maritalStatus', maritalStatus ? 'true' : 'false');
+    formData.append('language', language);
+    formData.append('role', 'Creator');
+    formData.append('userName', username);
+    formData.append('roleRef', 'Creator');
+    if (dob) formData.append('dateOfBirth', dob.toISOString());
+
+    if (imageUrl) {
+      const filename = imageUrl.split('/').pop();
+      const fileType = filename?.split('.').pop();
+      formData.append('file', {
+        uri: imageUrl,
+        name: filename || 'profile.jpg',
+        type: `image/${fileType || 'jpg'}`,
+      } as any);
+    }
+
+    const res = await fetch('http://192.168.1.19:5000/api/user/profile/detail/update', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      alert('Profile updated successfully!');
+      fetchProfileDetail();
+    } else {
+      console.error('Error updating profile:', data);
+      alert(data.message || 'Update failed');
+    }
+  } catch (err) {
+    console.error('Save error:', err);
+    alert('Something went wrong while saving');
+  }
+};
 
   return (
     <SafeAreaView style={{ backgroundColor: colors.card, flex: 1 }}>

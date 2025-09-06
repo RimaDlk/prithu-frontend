@@ -49,10 +49,34 @@ const LanguageScreen: React.FC = () => {
 
     const handleNext = async () => {
         if (selectedLang) {
-            await AsyncStorage.setItem("AppLanguage", selectedLang);
-            navigation.navigate("FeedScreen"); // go to homepage
+            try {
+                // Save locally
+                await AsyncStorage.setItem("AppLanguage", selectedLang);
+
+                // Get token (assuming you store it in AsyncStorage after login)
+                const token = await AsyncStorage.getItem("userToken");
+
+                // Send to backend
+                const response = await fetch("http://192.168.1.19:5000/api/app/language", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`, // ✅ auth middleware expects token
+                    },
+                    body: JSON.stringify({ language: selectedLang }),
+                });
+
+                const data = await response.json();
+                console.log("Language saved:", data);
+
+                // Navigate after success
+                navigation.navigate("FeedScreen");
+            } catch (error) {
+                console.error("Error saving language:", error);
+            }
         }
     };
+
 
     if (loading) return null;
 

@@ -239,7 +239,8 @@ const AddStory = ({ navigation }: AddStoryScreenProps) => {
   const pickMedia = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
+      // allowsEditing: true,
+      allowsEditing: false,
       quality: 1,
       videoMaxDuration: 60,
     });

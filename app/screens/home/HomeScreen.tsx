@@ -16,6 +16,7 @@ import PostList from './PostList';
 import Categories from './Categories';
 import PostShareSheet from '../../components/bottomsheet/PostShareSheet';
 import PostoptionSheet from '../../components/bottomsheet/PostoptionSheet';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { height: windowHeight } = Dimensions.get('window');
 
@@ -30,7 +31,8 @@ const HomeScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   // ✅ Android Back Button
-  useEffect(() => {
+useFocusEffect(
+  React.useCallback(() => {
     const backAction = () => {
       Alert.alert('Exit App', 'Are you sure you want to exit?', [
         { text: 'Cancel', onPress: () => null, style: 'cancel' },
@@ -43,8 +45,11 @@ const HomeScreen = () => {
       'hardwareBackPress',
       backAction
     );
+
     return () => backHandler.remove();
-  }, []);
+  }, [])
+);
+
 
   // ✅ Pull to Refresh
   const onRefresh = async () => {

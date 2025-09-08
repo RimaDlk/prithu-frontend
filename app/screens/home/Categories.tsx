@@ -24,7 +24,7 @@ const Categories: React.FC = () => {
     const fetchCategories = async () => {
       try {
         const res = await fetch(
-          "http://192.168.1.19:5000/api/all/catagories"
+          "http://192.168.1.4:5000/api/all/catagories"
         );
 
         const data = await res.json();

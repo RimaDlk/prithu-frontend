@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Image, Platform, TouchableOpacity, View, Animated, Text, Dimensions } from 'react-native';
 import { COLORS, SIZES, FONTS, IMAGES } from '../constants/theme';
 import { useTheme } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {
     widthPercentageToDP as wp,
@@ -9,7 +10,6 @@ import {
 } from 'react-native-responsive-screen';
 import { useSelector } from 'react-redux';
 import { GlobalStyleSheet } from '../constants/styleSheet';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = {
     state: any,
@@ -19,37 +19,11 @@ type Props = {
 
 const BottomTab = ({ state, descriptors, navigation }: Props) => {
 
-    const [profileUrl, setProfileUrl] = useState<string | null>(null);
-
-
-    useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const userId = await AsyncStorage.getItem("userId");
-                if (!userId) return;
-
-                const res = await fetch(`http://192.168.1.19:5000/api/get/profile/detail/${userId}`);
-                const data = await res.json();
-
-                if (res.ok && data.profileSetting) {
-                    const avatar = data.profileSetting.profileAvatar
-                        ? `http://192.168.1.19:5000/${data.profileSetting.profileAvatar.replace(/\\/g, "/")}`
-                        : null;
-                    setProfileUrl(avatar);
-                }
-            } catch (err) {
-                console.log("Error fetching profile:", err);
-            }
-        };
-
-        fetchProfile();
-    }, []);
-
-
     const theme = useTheme();
     const { colors }: { colors: any } = theme;
 
     const [tabWidth, setWidth] = useState(wp('100%'));
+    const [profilePic, setProfilePic] = useState<string | null>(null);  //new here 
 
     const tabWD =
         tabWidth < SIZES.container ? tabWidth / 5 : SIZES.container / 5;
@@ -61,6 +35,53 @@ const BottomTab = ({ state, descriptors, navigation }: Props) => {
     Dimensions.addEventListener('change', val => {
         setWidth(val.window.width);
     });
+
+    // ✅ fetch profile image from backend like in Profile screen
+   const fetchProfilePic = async () => {
+  try {
+    const userToken = await AsyncStorage.getItem('userToken'); 
+    if (!userToken) {
+      console.warn("No user token found in AsyncStorage");
+      return;
+    }
+
+    const res = await fetch("http://192.168.1.4:5000/api/get/profile/detail", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${userToken}`, // pass token here
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      console.error(`Failed to fetch profile: ${res.status} ${res.statusText}`);
+      return;
+    }
+
+    const data = await res.json();
+
+    if (data?.profile) {
+      const profileData = data.profile;
+
+      const fixedAvatar = profileData.profileAvatar
+        ? `http://192.168.1.4:5000/${profileData.profileAvatar.replace(/\\/g, '/')}`
+        : "https://cdn-icons-png.flaticon.com/512/149/149071.png"; // fallback avatar
+
+      setProfilePic(fixedAvatar);
+
+      // If you want the full details, store them in state too
+      setProfileDetails(profileData); 
+    }
+  } catch (err) {
+    console.error("Error fetching profile picture:", err);
+  }
+};
+
+
+    useEffect(() => {
+        fetchProfilePic();
+    }, []);
+
 
     useEffect(() => {
         Animated.spring(circlePosition, {
@@ -145,20 +166,23 @@ const BottomTab = ({ state, descriptors, navigation }: Props) => {
 
                         const isFocused = state.index === index;
 
-
-                        const iconTranslateY = useRef(new Animated.Value(0)).current;
-                        Animated.timing(iconTranslateY, {
-                            toValue: isFocused ? -18 : 0,
-                            duration: 200,
-                            useNativeDriver: true,
-                        }).start();
-
                         const onPress = () => {
                             const event = navigation.emit({
                                 type: 'tabPress',
                                 target: route.key,
                                 canPreventDefault: true,
                             });
+
+                            // 👇 Special case for createpost 
+                            if (label === 'Reels') {
+                                navigation.navigate('createpost'); // <-- Your create post screen name
+                                return;
+                            }
+                            // 👇 Special case for Plus (Reels in your current mapping)
+                            if (label === 'Chat') {
+                                navigation.navigate('Reels'); // <-- Your create post screen name
+                                return;
+                            }
 
                             if (!isFocused && !event.defaultPrevented) {
                                 navigation.navigate({ name: route.name, merge: true });
@@ -167,36 +191,46 @@ const BottomTab = ({ state, descriptors, navigation }: Props) => {
                         };
 
 
+
                         return (
                             <TouchableOpacity
                                 key={index}
                                 activeOpacity={.8}
-                                accessibilityRole="button"
-                                accessibilityState={isFocused ? { selected: true } : {}}
-                                accessibilityLabel={options.tabBarAccessibilityLabel}
-                                testID={options.tabBarTestID}
                                 onPress={onPress}
                                 style={{ flex: 1, alignItems: 'center', height: '100%', justifyContent: 'center', marginTop: 5 }}
                             >
-                                <Image
-                                    style={
-                                        label == "Profile"
-                                            ? { width: 34, height: 34, borderRadius: 50 }
-                                            : { width: 20, height: 20, opacity: isFocused ? 1 : 0.4, tintColor: isFocused ? COLORS.primary : colors.text }
-                                    }
-                                    source={
-                                        label == "Home" ? IMAGES.home :
-                                            label == "Search" ? IMAGES.search :
-                                                label == "Reels" ? IMAGES.reels :
-                                                    label == "Chat" ? IMAGES.chat :
-                                                        label == "Profile"
-                                                            ? profileUrl
-                                                                ? { uri: profileUrl }
-                                                                : IMAGES.profile   // fallback if no image
-                                                            : IMAGES.eyeclose
-                                    }
-                                />
-
+                                {label === 'Profile' ? (
+                                    <Image
+                                        style={{
+                                            width: 34,
+                                            height: 34,
+                                            borderRadius: 50,
+                                            borderWidth: isFocused ? 2 : 0,
+                                            borderColor: isFocused ? COLORS.primary : 'transparent',
+                                        }}
+                                        source={
+                                            profilePic
+                                                ? { uri: profilePic }
+                                                : IMAGES.profile // fallback image
+                                        }
+                                    />
+                                ) : (
+                                    <Image
+                                        style={{
+                                            width: 20,
+                                            height: 20,
+                                            opacity: isFocused ? 1 : .4,
+                                            tintColor: isFocused ? COLORS.primary : colors.text
+                                        }}
+                                        source={
+                                            label == 'Home' ? IMAGES.home :
+                                                label == 'Search' ? IMAGES.search :
+                                                    label == 'Reels' ? IMAGES.plus :
+                                                        label == 'Chat' ? IMAGES.reels :
+                                                            IMAGES.eyeclose
+                                        }
+                                    />
+                                )}
                             </TouchableOpacity>
                         );
                     })}
@@ -205,5 +239,6 @@ const BottomTab = ({ state, descriptors, navigation }: Props) => {
         </View>
     );
 };
+
 
 export default BottomTab;

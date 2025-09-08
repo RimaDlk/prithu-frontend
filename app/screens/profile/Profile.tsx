@@ -19,7 +19,7 @@ const data = [
   {
     id: '1',
     image: IMAGES.profilepic2,
-    like:'164',
+    like: '164',
   },
   {
     id: '2',
@@ -113,7 +113,7 @@ const ReelsData = [
 
 type ProfileScreenProps = StackScreenProps<RootStackParamList, 'Profile'>;
 
-const Profile = ({ navigation } : ProfileScreenProps) => {
+const Profile = ({ navigation }: ProfileScreenProps) => {
 
   const [profile, setProfile] = useState<any>({
     displayName: '',
@@ -123,6 +123,12 @@ const Profile = ({ navigation } : ProfileScreenProps) => {
     profileAvatar: '',
   });
 
+  const [posts, setPosts] = useState<any[]>([]);
+  const [reels, setReels] = useState([]); // videos
+  const [postCount, setPostCount] = useState<number>(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const fetchProfile = async () => {
     try {
       const userToken = await AsyncStorage.getItem('userToken');
@@ -131,7 +137,7 @@ const Profile = ({ navigation } : ProfileScreenProps) => {
         return;
       }
 
-      const res = await fetch('http://192.168.1.19:5000/api/get/profile/detail', {
+      const res = await fetch('http://192.168.1.4:5000/api/get/profile/detail', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${userToken}`,
@@ -142,7 +148,7 @@ const Profile = ({ navigation } : ProfileScreenProps) => {
       if (res.ok && data.profile) {
         const profileData = data.profile;
         const fixedAvatar = profileData.profileAvatar
-          ? `http://192.168.1.19:5000/${profileData.profileAvatar.replace(/\\/g, '/')}`
+          ? `http://192.168.1.4:5000/${profileData.profileAvatar.replace(/\\/g, '/')}`
           : '';
 
         setProfile({
@@ -166,8 +172,60 @@ const Profile = ({ navigation } : ProfileScreenProps) => {
     fetchProfile();
   }, []);
 
+  useEffect(() => {
+    const fetchFeeds = async () => {
+      try {
+        setLoading(true);
 
+        const token = await AsyncStorage.getItem('userToken');
+        if (!token) {
+          Alert.alert('Error', 'User not authenticated');
+          setLoading(false);
+          return;
+        }
 
+        const response = await fetch('http://192.168.1.4:5000/api/creator/getall/feeds', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+        const feeds = data.feeds || [];
+
+        // Image posts
+        const imagePosts = feeds
+          .filter((feed: any) => feed.type === 'image')
+          .map((feed: any) => ({
+            id: feed._id,
+            image: { uri: `http://192.168.1.4:5000/${feed.contentUrl.replace(/\\/g, '/')}` },
+            like: (feed.like ?? 0).toString(),
+          }));
+
+        // Video reels
+        const videoReels = feeds
+          .filter((feed: any) => feed.type === 'video')
+          .map((feed: any) => ({
+            id: feed._id,
+            image: { uri: `http://192.168.1.4:5000/${feed.contentUrl.replace(/\\/g, '/')}` },
+            like: (feed.like ?? 0).toString(),
+          }));
+
+        setPosts(imagePosts);
+        setReels(videoReels);
+        setPostCount(imagePosts.length);
+
+      } catch (err: any) {
+        console.error('Fetch posts error:', err);
+        setError(err.message || 'Failed to fetch posts');
+        Alert.alert('Error', err.message || 'Failed to fetch posts');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeeds();
+  }, []);
 
   const scrollRef = useRef<any>();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -175,11 +233,11 @@ const Profile = ({ navigation } : ProfileScreenProps) => {
 
   const slideIndicator = scrollX.interpolate({
     inputRange: [0, SIZES.width],
-    outputRange: [0, (SIZES.width - 30)/ 2],
+    outputRange: [0, (SIZES.width - 30) / 2],
     extrapolate: 'clamp',
   });
 
-  const onPressTouch = (val:any) => {
+  const onPressTouch = (val: any) => {
     setCurrentIndex(val)
     scrollRef.current?.scrollTo({
       x: SIZES.width * val,
@@ -188,128 +246,128 @@ const Profile = ({ navigation } : ProfileScreenProps) => {
   }
 
   const theme = useTheme();
-  const { colors } : {colors : any} = theme;
+  const { colors }: { colors: any } = theme;
 
-const onShare = async () => {
-  try {
-    const userId = await AsyncStorage.getItem('userId'); // get the current logged-in userId
-    if (!userId) {
-      Alert.alert("Error", "User not found");
-      return;
-    }
-
-    // Create a proper profile URL (replace with your deployed domain later)
-    const profileUrl = `http://192.168.1.19:5000/profile/${userId}`;
-
-    const result = await Share.share({
-      message: `Check out this profile: ${profileUrl}`,
-    });
-
-    if (result.action === Share.sharedAction) {
-      if (result.activityType) {
-        // shared with activity type
-      } else {
-        // shared
+  const onShare = async () => {
+    try {
+      const userId = await AsyncStorage.getItem('userId'); // get the current logged-in userId
+      if (!userId) {
+        Alert.alert("Error", "User not found");
+        return;
       }
-    } else if (result.action === Share.dismissedAction) {
-      // dismissed
+
+      // Create a proper profile URL (replace with your deployed domain later)
+      const profileUrl = `http://192.168.1.4:5000/profile/${userId}`;
+
+      const result = await Share.share({
+        message: `Check out this profile: ${profileUrl}`,
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // shared with activity type
+        } else {
+          // shared
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // dismissed
+      }
+    } catch (error: any) {
+      Alert.alert(error.message);
     }
-  } catch (error: any) {
-    Alert.alert(error.message);
-  }
-};
+  };
 
 
   return (
-    <SafeAreaView style={[GlobalStyleSheet.container,{padding:0, backgroundColor: theme.dark ? colors.background : colors.card, flex: 1 }]}>
+    <SafeAreaView style={[GlobalStyleSheet.container, { padding: 0, backgroundColor: theme.dark ? colors.background : colors.card, flex: 1 }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <ImageBackground
-            style={{width:'100%',height:300,borderBottomLeftRadius:25,borderBottomRightRadius:25,overflow:'hidden'}}
-            source={IMAGES.profilebackground}
-          >
-            <View style={GlobalStyleSheet.container}>
-              <View style={[GlobalStyleSheet.flexalingjust,{marginTop:10}]}>
-                <TouchableOpacity
-                  onPress={() => navigation.goBack()}
-                >
-                  <Image
-                    style={{ width: 18, height: 18, tintColor: '#fff' }}
-                    source={IMAGES.arrowleft}
-                  />
-                </TouchableOpacity>
+          style={{ width: '100%', height: 370, borderBottomLeftRadius: 25, borderBottomRightRadius: 25, overflow: 'hidden' }}
+          source={IMAGES.profilebackground}
+        >
+          <View style={GlobalStyleSheet.container}>
+            <View style={[GlobalStyleSheet.flexalingjust, { marginTop: 10 }]}>
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+              >
+                <Image
+                  style={{ width: 18, height: 18, tintColor: '#fff' }}
+                  source={IMAGES.arrowleft}
+                />
+              </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => navigation.navigate('Settings')}
               >
-                  <View style={GlobalStyleSheet.background}>
-                    <Image
-                      style={[GlobalStyleSheet.image,{tintColor: COLORS.white }]}
-                      source={IMAGES.setting}
-                    />
-                  </View>
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-              <View>
-                <TouchableOpacity>
-                  <View style={{ backgroundColor:'rgba(217, 217, 217, .6)',height:110,width:110,borderRadius:100,alignItems:'center',justifyContent:'center'}}>
-                    <Image
-                        style={{width:100,height:100,borderRadius:100}}
-                        source={profile.profileAvatar ? { uri: profile.profileAvatar } : IMAGES.profile}
-                    />
-                  </View>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={()=> navigation.navigate('EditProfile')}
-                  style={{position:'absolute',bottom:0,right:0}}
-                >
-                  <View style={{ backgroundColor: '#001F50', width: 36, height: 36, borderRadius: 50, alignItems:'center',justifyContent:'center' }}>
-                    <View style={{ backgroundColor: '#2979F8', width: 30, height: 30, borderRadius: 50, alignItems:'center',justifyContent:'center'}}>
-                      <Image
-                        style={{width:18,height:18,resizeMode:'contain'}}
-                        source={IMAGES.write2}
-                      />
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              </View>
-              <View style={{marginTop:20,alignItems:'center'}}>
-                <Text style={{ ...FONTS.h6, ...FONTS.fontMedium, color: COLORS.white }}>{profile.displayName}</Text>
-                <Text style={{ ...FONTS.font, ...FONTS.fontRegular, color: COLORS.white,opacity:.6,marginTop:5 }}>{profile.username}</Text>
-              </View>
-            {/* <View style={{ backgroundColor: 'rgba(255, 255, 255, .1)', height: 70, width: 300, borderRadius: 12, marginTop: 20, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', }}>
-              
-                <View style={{ alignItems: 'center', width: '33.33%' }}>
-                  <Text style={GlobalStyleSheet.textfont2}>54</Text>
-                  <Text style={GlobalStyleSheet.titlefont}>Post</Text>
+                <View style={GlobalStyleSheet.background}>
+                  <Image
+                    style={[GlobalStyleSheet.image, { tintColor: COLORS.white }]}
+                    source={IMAGES.setting}
+                  />
                 </View>
-                <View style={{ width: '33.33%' }}>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <View>
+              <TouchableOpacity>
+                <View style={{ backgroundColor: 'rgba(217, 217, 217, .6)', height: 110, width: 110, borderRadius: 100, alignItems: 'center', justifyContent: 'center' }}>
+                  <Image
+                    style={{ width: 100, height: 100, borderRadius: 100 }}
+                    source={profile.profileAvatar ? { uri: profile.profileAvatar } : IMAGES.profile}
+                  />
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('EditProfile')}
+                style={{ position: 'absolute', bottom: 0, right: 0 }}
+              >
+                <View style={{ backgroundColor: '#001F50', width: 36, height: 36, borderRadius: 50, alignItems: 'center', justifyContent: 'center' }}>
+                  <View style={{ backgroundColor: '#2979F8', width: 30, height: 30, borderRadius: 50, alignItems: 'center', justifyContent: 'center' }}>
+                    <Image
+                      style={{ width: 18, height: 18, resizeMode: 'contain' }}
+                      source={IMAGES.write2}
+                    />
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </View>
+            <View style={{ marginTop: 20, alignItems: 'center' }}>
+              <Text style={{ ...FONTS.h6, ...FONTS.fontMedium, color: COLORS.white }}>{profile.displayName}</Text>
+              <Text style={{ ...FONTS.font, ...FONTS.fontRegular, color: COLORS.white, opacity: .6, marginTop: 5 }}>{profile.username}</Text>
+            </View>
+            <View style={{ backgroundColor: 'rgba(255, 255, 255, .1)', height: 70, width: 200, borderRadius: 12, marginTop: 20, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', }}>
+
+              <View style={{ alignItems: 'center', width: '50%' }}>
+                <Text style={GlobalStyleSheet.textfont2}>{postCount}</Text>
+                <Text style={GlobalStyleSheet.titlefont}>Post</Text>
+              </View>
+              <View style={{ width: '50%' }}>
                 <TouchableOpacity style={{ alignItems: 'center' }}
                   onPress={() => navigation.navigate('Followers')}
                 >
-                      <Text style={GlobalStyleSheet.textfont2}>1250</Text>
-                      <Text style={GlobalStyleSheet.titlefont}>Followers</Text>
-                  </TouchableOpacity>
-                </View>
-                <View style={{ width: '33.33%' }}>
+                  <Text style={GlobalStyleSheet.textfont2}>1250</Text>
+                  <Text style={GlobalStyleSheet.titlefont}>Followers</Text>
+                </TouchableOpacity>
+              </View>
+              {/* <View style={{ width: '33.33%' }}>
                 <TouchableOpacity style={{ alignItems: 'center', }}
                   onPress={() => navigation.navigate('Followers')}
                 >
                     <Text style={GlobalStyleSheet.textfont2}>500</Text>
                     <Text style={GlobalStyleSheet.titlefont}>Following</Text>
                   </TouchableOpacity>
-                </View>
-              
-                <LinearGradient colors={['rgba(255, 255, 255, 0.00) ', 'rgba(255, 255, 255, 0.20)', 'rgba(255, 255, 255, 0.00) ']}
-                  style={{width:2,height:50,position:'absolute',right:100}}
-                ></LinearGradient>
-                <LinearGradient colors={['rgba(255, 255, 255, 0.00) ', 'rgba(255, 255, 255, 0.20)', 'rgba(255, 255, 255, 0.00) ']}
-                  style={{ width: 2, height: 50, position: 'absolute', left: 100 }}
-                ></LinearGradient>
-              </View> */}
+                </View> */}
+
+              <LinearGradient colors={['rgba(255, 255, 255, 0.00) ', 'rgba(255, 255, 255, 0.20)', 'rgba(255, 255, 255, 0.00) ']}
+                style={{ width: 2, height: 50, position: 'absolute', right: 100 }}
+              ></LinearGradient>
+              <LinearGradient colors={['rgba(255, 255, 255, 0.00) ', 'rgba(255, 255, 255, 0.20)', 'rgba(255, 255, 255, 0.00) ']}
+                style={{ width: 2, height: 50, position: 'absolute', left: 100 }}
+              ></LinearGradient>
             </View>
+          </View>
         </ImageBackground>
-        <View style={{flexDirection:'row',alignItems:'center',justifyContent:'center',gap:10,marginTop:20}}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 20 }}>
           <Followbtn
             onPress={() => navigation.navigate('Suggestions')}
             title='Referrals'
@@ -319,32 +377,32 @@ const onShare = async () => {
             title='Share Profile'
           />
         </View>
-        <View style={{marginHorizontal:15}}>
-          <View 
+        <View style={{ marginHorizontal: 15 }}>
+          <View
             style={[
-              GlobalStyleSheet.container, 
-              { 
+              GlobalStyleSheet.container,
+              {
                 backgroundColor: theme.dark ? 'rgba(255,255,255,.1)' : '#EFF3FA',
-                padding:10,
-                marginHorizontal:20,
-                borderRadius:6,
-                marginTop:20
+                padding: 10,
+                marginHorizontal: 20,
+                borderRadius: 6,
+                marginTop: 20
               }
             ]}
           >
-            <Text style={{...FONTS.fontXs,lineHeight:18,color:colors.title}}>{profile.bio}</Text>
+            <Text style={{ ...FONTS.fontXs, lineHeight: 18, color: colors.title }}>{profile.bio}</Text>
           </View>
         </View>
         <View style={GlobalStyleSheet.container}>
-          <View style={{flexDirection:'row',marginTop:10,marginBottom:0,}}>
+          <View style={{ flexDirection: 'row', marginTop: 10, marginBottom: 0, }}>
             <TouchableOpacity
               onPress={() => onPressTouch(0)}
               style={GlobalStyleSheet.TouchableOpacity2}>
               <Image
-                style={[{ width: 16, height: 16, tintColor: '#475A77' },currentIndex == 0 && {tintColor:COLORS.primary}]}
+                style={[{ width: 16, height: 16, tintColor: '#475A77' }, currentIndex == 0 && { tintColor: COLORS.primary }]}
                 source={IMAGES.profilepic}
               />
-              <Text style={[{ ...FONTS.fontMedium, fontSize: 14, color:'#475A77', marginLeft: 5 },currentIndex == 0 && { color: COLORS.primary }]}> Post</Text>
+              <Text style={[{ ...FONTS.fontMedium, fontSize: 14, color: '#475A77', marginLeft: 5 }, currentIndex == 0 && { color: COLORS.primary }]}> Post</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => onPressTouch(1)}
@@ -378,7 +436,7 @@ const onShare = async () => {
             [{ nativeEvent: { contentOffset: { x: scrollX } } }],
             { useNativeDriver: false }
           )}
-          onMomentumScrollEnd={(e:any) => {
+          onMomentumScrollEnd={(e: any) => {
             if (e.nativeEvent.contentOffset.x.toFixed(0) == SIZES.width.toFixed(0)) {
               setCurrentIndex(1)
             } else if (e.nativeEvent.contentOffset.x.toFixed(0) == 0) {
@@ -388,32 +446,31 @@ const onShare = async () => {
             }
           }}
         >
-          <View style={[GlobalStyleSheet.container,{marginTop: 5, width: SIZES.width,padding:0}]}>
-            <ProfilePostData navigation={navigation} ProfilepicData={data} />
+          <View style={[GlobalStyleSheet.container, { marginTop: 5, width: SIZES.width, padding: 0 }]}>
+            <ProfilePostData navigation={navigation} ProfilepicData={posts} />
           </View>
-          <View style={[GlobalStyleSheet.container,{marginTop: 5, width: SIZES.width,padding:0}]}>
-            <View style={{flexDirection: 'row',flexWrap:'wrap' }}>
-              {ReelsData.map((data,index) => {
-                return (
-                  <View key={index} style={{ width: '33.33%', padding: 2 }}>
-                    <TouchableOpacity
-                      onPress={() => navigation.navigate('ProfileReels')}
-                    >
-                        <Image
-                          style={{width:'100%',height:null, aspectRatio:1/1.8, }}
-                          source={data.image}
+          <View style={[GlobalStyleSheet.container, { marginTop: 5, width: SIZES.width, padding: 0 }]}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+              {reels.map((data, index) => (
+                <View key={index} style={{ width: '33.33%', padding: 2 }}>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('ProfileReels', { videoUrl: data.image.uri })}
+                  >
+                    <Image
+                      style={{ width: '100%', height: null, aspectRatio: 1 / 1.8 }}
+                      source={data.image}
+                    />
+                    <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.20)', position: 'absolute', borderRadius: 15, paddingHorizontal: 10, paddingVertical: 3, top: 10, right: 10 }}>
+                      <Image
+                        style={{ width: 12, height: 12, resizeMode: 'contain', tintColor: '#fff' }}
+                        source={IMAGES.eyeopen}
                       />
-                      <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.20)', position: 'absolute', borderRadius: 15, paddingHorizontal: 10, paddingVertical: 3, top: 10, right: 10 }}>
-                        <Image
-                          style={{ width: 12, height: 12, resizeMode: 'contain', tintColor: '#fff' }}
-                          source={IMAGES.eyeopen}
-                        />
-                        <Text style={{ ...FONTS.fontRegular, fontSize: 10, color: COLORS.white, lineHeight: 14 }}>{data.like}</Text>
-                      </View>
-                      </TouchableOpacity>
-                  </View>
-                )
-              })}
+                      <Text style={{ ...FONTS.fontRegular, fontSize: 10, color: COLORS.white, lineHeight: 14 }}>{data.like}</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              ))}
+
             </View>
           </View>
         </ScrollView>

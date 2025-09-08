@@ -40,7 +40,7 @@ const PostList = forwardRef((props: any, ref: any) => {
       return;
     }
 
-    const res = await axios.get('http://192.168.1.19:5000/api/all/feeds', {
+    const res = await axios.get('http://192.168.1.4:5000/api/all/feeds', {
       headers: {
         Authorization: `Bearer ${token}`,
       },

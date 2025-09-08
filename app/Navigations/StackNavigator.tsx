@@ -102,6 +102,7 @@ import AppLanguage from '../screens/settings/Feed/AppLanguage';
 import FeedLanguage from '../screens/settings/Feed/FeedLanguage';
 import FeedScreen from '../screens/auth/FeedScreen';
 import ReferralDashboard from '../screens/settings/Referrals/ReferralDashboard';
+import CommentSheet from '../screens/comment/CommentSheet';
 
 // import BottomSheetComments from '../components/bottomsheet/BottomSheetComments';
 // import { View } from 'react-native-reanimated/lib/typescript/Animated';
@@ -250,6 +251,7 @@ const StackNavigator = () => {
                 <Stack.Screen name='FeedLanguage' component={FeedLanguage}/>
                 <Stack.Screen name='LanguageScreen' component={LanguageScreen}/>
                 <Stack.Screen name='FeedScreen' component={FeedScreen}/>
+                <Stack.Screen name='CommentSheet' component={CommentSheet}/>
             
             </Stack.Navigator>
         </SafeAreaView>

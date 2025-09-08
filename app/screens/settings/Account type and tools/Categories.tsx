@@ -63,7 +63,7 @@ const Categories = ({ navigation }) => {
 
             // Make API call to add account with default type
             const response = await axios.post(
-                "http://192.168.1.19:5000/api/account/add",
+                "http://192.168.1.4:5000/api/account/add",
                 {
                     type:"Creator", // Use selected category or default to "Creator"
                 },

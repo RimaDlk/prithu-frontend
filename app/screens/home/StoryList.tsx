@@ -13,19 +13,35 @@ const StoryList = () => {
   const [activeAccountType, setActiveAccountType] = useState<string | null>(null);
 
   // ✅ Fetch profile avatar
-  useEffect(() => {
+    useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const userId = await AsyncStorage.getItem('userId');
-        if (!userId) return;
+        const userToken = await AsyncStorage.getItem('userToken');
+        if (!userToken) {
+          console.warn('No user token found');
+          return;
+        }
 
-        const res = await fetch(`http://192.168.1.19:5000/api/get/profile/detail/${userId}`);
+        const res = await fetch(`http://192.168.1.4:5000/api/get/profile/detail`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!res.ok) {
+          console.error(`Failed to fetch profile: ${res.status} ${res.statusText}`);
+          return;
+        }
+
         const data = await res.json();
 
-        if (res.ok && data.profileSetting) {
-          const avatar = data.profileSetting.profileAvatar
-            ? { uri: `http://192.168.1.19:5000/${data.profileSetting.profileAvatar.replace(/\\/g, '/')}` }
+        if (data?.profile) {
+          const avatar = data.profile.profileAvatar
+            ? { uri: `http://192.168.1.4:5000/${data.profile.profileAvatar.replace(/\\/g, '/')}` }
             : IMAGES.profile;
+
           setProfileUrl(avatar);
         }
       } catch (error) {
@@ -36,6 +52,7 @@ const StoryList = () => {
     fetchProfile();
   }, []);
 
+  
   // ✅ Fetch active account type
   useEffect(() => {
     const fetchAccountType = async () => {

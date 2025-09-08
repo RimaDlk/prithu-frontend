@@ -72,7 +72,7 @@ const Nextpage = ({ route, navigation }: NextpageScreenProps) => {
       formData.append('type', mediaType);
 
       const token = await AsyncStorage.getItem('userToken');
-      const res = await axios.post('http://192.168.1.19:5000/api/creator/feed/upload', formData, {
+      const res = await axios.post('http://192.168.1.4:5000/api/creator/feed/upload', formData, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
       });
 

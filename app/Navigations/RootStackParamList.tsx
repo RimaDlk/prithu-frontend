@@ -129,5 +129,6 @@ export type RootStackParamList = {
     LanguageScreen: undefined;
     FeedScreen: undefined;
     Friend:undefined;
+    CommentSheet: undefined;
 
 };

@@ -13,6 +13,7 @@ import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import BottomSheetComments from './bottomsheet/BottomSheetComments';
 import { useRef } from 'react';
+import CommentSheet from '../screens/comment/CommentSheet';
 
 
 
@@ -235,8 +236,8 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
                             </TouchableOpacity>
                         </View>
                         <TouchableOpacity
-                            onPress={() => navigation.navigate('Comments')}
-                        >
+                           onPress={() => commentSheetRef.current?.openSheet()} >
+                              {/* <TouchableOpacity onPress={() => commentSheetRef.current?.openSheet()}></TouchableOpacity> */}
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <Image
                                     style={{ width: 22, height: 22, resizeMode: 'contain', tintColor: colors.title }}
@@ -356,6 +357,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
                 </View> */}
                
             </View>
+             <CommentSheet ref={commentSheetRef} /> 
         </View>
     )
 }

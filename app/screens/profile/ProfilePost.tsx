@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { View, Text,TouchableOpacity,Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, IMAGES, FONTS, SIZES } from '../../constants/theme';
@@ -11,6 +11,7 @@ import LikeBtn from '../../components/likebtn/LikeBtn';
 import { ScrollView } from 'react-native-gesture-handler';
 import PostShareSheet from '../../components/bottomsheet/PostShareSheet';
 import PostoptionSheet from '../../components/bottomsheet/PostoptionSheet';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const postList = [
     {
@@ -229,6 +230,37 @@ const ProfilePost = () => {
     const { colors } : {colors : any} = theme;
 
     const navigation = useNavigation<any>();
+    const [Posts, setPosts] = useState()
+
+
+    useEffect(() => {
+     const fetchMyPosts = async () => {
+    try {
+      const token = await AsyncStorage.getItem("userToken");
+      if (!token) return;
+
+      const res = await fetch("http://192.168.1.4:5000/api/creator/getall/feeds", {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+        
+      });
+      console.log(res)
+      const data = await res.json();
+      if (res.ok && data.feeds) {
+        const fixed = data.feeds.map((item: any) => ({
+          ...item,
+          contentUrl: `http://192.168.1.4:5000/${item.contentUrl.replace(/\\/g, "/")}`,
+        }));
+        setPosts(fixed);
+      }
+    } catch (error) {
+      console.log("Error fetching posts:", error);
+    }
+  };
+
+  fetchMyPosts();
+}, []);
+
 
     return (
         <SafeAreaView style={{backgroundColor:colors.card,flex:1}}>

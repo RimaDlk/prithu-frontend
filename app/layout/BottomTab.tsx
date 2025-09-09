@@ -62,15 +62,13 @@ const BottomTab = ({ state, descriptors, navigation }: Props) => {
 
     if (data?.profile) {
       const profileData = data.profile;
-
       const fixedAvatar = profileData.profileAvatar
-        ? `http://192.168.1.4:5000/${profileData.profileAvatar.replace(/\\/g, '/')}`
-        : "https://cdn-icons-png.flaticon.com/512/149/149071.png"; // fallback avatar
+ 
 
       setProfilePic(fixedAvatar);
 
       // If you want the full details, store them in state too
-      setProfileDetails(profileData); 
+    //   setProfileDetails(profileData); 
     }
   } catch (err) {
     console.error("Error fetching profile picture:", err);

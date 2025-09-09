@@ -36,14 +36,10 @@ const StoryList = () => {
         }
 
         const data = await res.json();
+        setProfileUrl({ uri: data.profile.profileAvatar });
 
-        if (data?.profile) {
-          const avatar = data.profile.profileAvatar
-            ? { uri: `http://192.168.1.4:5000/${data.profile.profileAvatar.replace(/\\/g, '/')}` }
-            : IMAGES.profile;
-
-          setProfileUrl(avatar);
-        }
+        console.log(data.profile.profileAvatar)
+        
       } catch (error) {
         console.error('Error fetching profile:', error);
       }

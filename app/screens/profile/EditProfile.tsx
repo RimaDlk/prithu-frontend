@@ -69,6 +69,7 @@ const EditProfile = () => {
         setPhoneNumber(profile.phoneNumber || '');
         setMaritalStatus(profile.maritalStatus === true || profile.maritalStatus === 'true');
         setLanguage(profile.language || 'en');
+       
 
         if (profile.dateOfBirth) {
           setDob(new Date(profile.dateOfBirth));
@@ -77,8 +78,7 @@ const EditProfile = () => {
         }
 
         if (profile.profileAvatar) {
-          const fixedPath = profile.profileAvatar.replace(/\\/g, '/');
-          setImageUrl(`http://192.168.1.4:5000/${fixedPath}`);
+          setImageUrl(profile.profileAvatar);
         } else {
           setImageUrl('');
         }

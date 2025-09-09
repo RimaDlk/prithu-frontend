@@ -40,12 +40,12 @@ const PostList = forwardRef((props: any, ref: any) => {
       return;
     }
 
-    const res = await axios.get('http://192.168.1.4:5000/api/all/feeds', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
+  const res = await axios.get('http://192.168.1.4:5000/api/get/all/feeds/user', {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
+    console.log(res)
     const feeds = res.data.feeds || [];
     console.log('API response:', res.data);
 
@@ -83,7 +83,7 @@ const PostList = forwardRef((props: any, ref: any) => {
     );
 
     // ✅ or if you want both images + videos, remove this filter
-    setPosts(mappedFeeds);
+    setPosts(imageFeeds);
 
   } catch (error) {
     console.error('Error fetching posts:', error);

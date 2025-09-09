@@ -15,101 +15,101 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
-const data = [
-  {
-    id: '1',
-    image: IMAGES.profilepic2,
-    like: '164',
-  },
-  {
-    id: '2',
-    image: IMAGES.profilepic15,
-    like: '132',
-  },
-  {
-    id: '3',
-    image: IMAGES.profilepic16,
-    like: '30',
-  },
-  {
-    id: '4',
-    image: IMAGES.profilepic17,
-    like: '154',
-  },
-  {
-    id: '5',
-    image: IMAGES.profilepic18,
-    like: '100',
-  },
-  {
-    id: '6',
-    image: IMAGES.profilepic4,
-    like: '1K',
-  },
-  {
-    id: '7',
-    image: IMAGES.profilepic10,
-    like: '164',
-  },
-  {
-    id: '8',
-    image: IMAGES.profilepic11,
-    like: '132',
-  },
-  {
-    id: '9',
-    image: IMAGES.profilepic12,
-    like: '30',
-  },
-  {
-    id: '10',
-    image: IMAGES.profilepic13,
-    like: '154',
-  },
-  {
-    id: '11',
-    image: IMAGES.profilepic14,
-    like: '100',
-  },
-  {
-    id: '12',
-    image: IMAGES.profilepic1,
-    like: '1K',
-  }
-]
+// const data = [
+//   {
+//     id: '1',
+//     image: IMAGES.profilepic2,
+//     like: '164',
+//   },
+//   {
+//     id: '2',
+//     image: IMAGES.profilepic15,
+//     like: '132',
+//   },
+//   {
+//     id: '3',
+//     image: IMAGES.profilepic16,
+//     like: '30',
+//   },
+//   {
+//     id: '4',
+//     image: IMAGES.profilepic17,
+//     like: '154',
+//   },
+//   {
+//     id: '5',
+//     image: IMAGES.profilepic18,
+//     like: '100',
+//   },
+//   {
+//     id: '6',
+//     image: IMAGES.profilepic4,
+//     like: '1K',
+//   },
+//   {
+//     id: '7',
+//     image: IMAGES.profilepic10,
+//     like: '164',
+//   },
+//   {
+//     id: '8',
+//     image: IMAGES.profilepic11,
+//     like: '132',
+//   },
+//   {
+//     id: '9',
+//     image: IMAGES.profilepic12,
+//     like: '30',
+//   },
+//   {
+//     id: '10',
+//     image: IMAGES.profilepic13,
+//     like: '154',
+//   },
+//   {
+//     id: '11',
+//     image: IMAGES.profilepic14,
+//     like: '100',
+//   },
+//   {
+//     id: '12',
+//     image: IMAGES.profilepic1,
+//     like: '1K',
+//   }
+// ]
 
-const ReelsData = [
-  {
-    id: '1',
-    image: IMAGES.profilepic19,
-    like: '164k',
-  },
-  {
-    id: '2',
-    image: IMAGES.profilepic20,
-    like: '12k',
-  },
-  {
-    id: '3',
-    image: IMAGES.profilepic21,
-    like: '160k',
-  },
-  {
-    id: '4',
-    image: IMAGES.profilepic22,
-    like: '134k',
-  },
-  {
-    id: '5',
-    image: IMAGES.profilepic5,
-    like: '13k',
-  },
-  {
-    id: '6',
-    image: IMAGES.profilepic6,
-    like: '4k',
-  },
-]
+// const ReelsData = [
+//   {
+//     id: '1',
+//     image: IMAGES.profilepic19,
+//     like: '164k',
+//   },
+//   {
+//     id: '2',
+//     image: IMAGES.profilepic20,
+//     like: '12k',
+//   },
+//   {
+//     id: '3',
+//     image: IMAGES.profilepic21,
+//     like: '160k',
+//   },
+//   {
+//     id: '4',
+//     image: IMAGES.profilepic22,
+//     like: '134k',
+//   },
+//   {
+//     id: '5',
+//     image: IMAGES.profilepic5,
+//     like: '13k',
+//   },
+//   {
+//     id: '6',
+//     image: IMAGES.profilepic6,
+//     like: '4k',
+//   },
+// ]
 
 type ProfileScreenProps = StackScreenProps<RootStackParamList, 'Profile'>;
 
@@ -128,6 +128,22 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
   const [postCount, setPostCount] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeAccountType, setActiveAccountType] = useState<string | null>(null);
+
+  
+      // 🔹 Fetch active account type once
+      useEffect(() => {
+          const fetchAccountType = async () => {
+              try {
+                  const storedType = await AsyncStorage.getItem("activeAccountType");
+                  console.log(storedType)
+                  if (storedType) setActiveAccountType(storedType);
+              } catch (err) {
+                  console.log("Error fetching account type:", err);
+              }
+          };
+          fetchAccountType();
+      }, []);
 
   const fetchProfile = async () => {
     try {
@@ -144,12 +160,11 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
         },
       });
       const data = await res.json();
-
+      
       if (res.ok && data.profile) {
         const profileData = data.profile;
         const fixedAvatar = profileData.profileAvatar
-          ? `http://192.168.1.4:5000/${profileData.profileAvatar.replace(/\\/g, '/')}`
-          : '';
+         
 
         setProfile({
           displayName: profileData.displayName || '',
@@ -367,16 +382,23 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
             </View>
           </View>
         </ImageBackground>
+
+
+        {/* Show only if Creator */}
+        {activeAccountType==="Creator" && (
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 20 }}>
           <Followbtn
             onPress={() => navigation.navigate('Suggestions')}
-            title='Referrals'
+            title='profile Dashboard'
           />
           <Sharebtn
             onPress={onShare}
             title='Share Profile'
           />
         </View>
+        )}
+
+
         <View style={{ marginHorizontal: 15 }}>
           <View
             style={[
@@ -454,7 +476,7 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
               {reels.map((data, index) => (
                 <View key={index} style={{ width: '33.33%', padding: 2 }}>
                   <TouchableOpacity
-                    onPress={() => navigation.navigate('ProfileReels', { videoUrl: data.image.uri })}
+                     onPress={() => navigation.navigate("ProfilePost")}   // 👈 only navigate
                   >
                     <Image
                       style={{ width: '100%', height: null, aspectRatio: 1 / 1.8 }}

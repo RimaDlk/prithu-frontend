@@ -4,32 +4,31 @@ import { IMAGES } from '../../constants/theme';
 import Animated, { Extrapolate, interpolate, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 
-const LikeBtn = ({ color, sizes } : any) => {
+const LikeBtn = ({ color, sizes, onPress, liked }: any) => {
+  // animation state starts from prop "liked"
+  const likedAnim = useSharedValue(liked ? 1 : 0);
 
-    const liked = useSharedValue(0);
-    const outlineStyle = useAnimatedStyle(() => {
-        return {
-          transform: [
-            {
-              scale: interpolate(liked.value, [0, 1], [1, 0], Extrapolate.CLAMP),
-            },
-          ],
-        };
-    });
-    const fillStyle = useAnimatedStyle(() => {
-        return {
-            transform: [
-            {
-                scale: liked.value,
-            },
-            ],
-        };
-    });
+  const outlineStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        scale: interpolate(likedAnim.value, [0, 1], [1, 0], Extrapolate.CLAMP),
+      },
+    ],
+  }));
 
-    const handleLike = () => {
-        liked.value = withSpring(liked.value ? 0 : 1)
+  const fillStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: likedAnim.value }],
+  }));
+
+  const handleLike = () => {
+    // animate toggle
+    likedAnim.value = withSpring(likedAnim.value ? 0 : 1);
+
+    // trigger backend update from PostCard
+    if (onPress) {
+      onPress();
     }
-
+  };
     return (
         <Pressable
             accessible={true}

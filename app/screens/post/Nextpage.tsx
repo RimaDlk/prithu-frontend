@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Alert,
-  TouchableOpacity,
 } from 'react-native';
 import { Video } from 'expo-av';
 import { useTheme } from '@react-navigation/native';
@@ -20,62 +19,94 @@ import { RootStackParamList } from '../../Navigations/RootStackParamList';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { useFocusEffect } from '@react-navigation/native';
+ 
 type NextpageScreenProps = StackScreenProps<RootStackParamList, 'Nextpage'>;
-
+ 
+type Category = {
+  categoryId: string;
+  categoriesName: string;
+};
+ 
 const Nextpage = ({ route, navigation }: NextpageScreenProps) => {
   const theme = useTheme();
   const { colors }: { colors: any } = theme;
-  const { mediaUrl, mediaType } = route.params || {}; // Get mediaUrl and mediaType from navigation params
-  console.log('Params in Nextpage:', mediaUrl, mediaType);
-
+  const { mediaUrl, mediaType } = route.params || {};
+ 
   // states
-  const [category, setCategory] = useState('');
+  const [categoryId, setCategoryId] = useState<string>(''); // store ID
+  const [categories, setCategories] = useState<Category[]>([]);
+const [loadingCategories, setLoadingCategories] = useState(true);
   const [language, setLanguage] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
-
-  // Add tag handler
-  const handleAddTag = () => {
-    if (tagInput.trim() !== '') {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput('');
+ 
+  // Fetch categories from backend
+  useEffect(() => {
+  const fetchCategories = async () => {
+    try {
+      const res = await axios.get('http://192.168.1.4:5000/api/creator/get/feed/category');
+        console.log("ddd",res.data.categories)
+      if (Array.isArray(res.data.categories)) {
+        // map to the type you need
+        const formatted = res.data.categories.map((cat: any) => ({
+          categoryId: cat._id,
+          categoriesName: cat.name,
+        }));
+        setCategories(formatted);
+      } else {
+        setCategories([]);
+      }
+    } catch (error: any) {
+      console.error('Error fetching categories:', error.response?.data || error.message);
+      setCategories([]);
+    } finally {
+      setLoadingCategories(false);
     }
   };
-
+  fetchCategories();
+}, []);
+ 
+ 
   const handlePost = async () => {
     if (!mediaUrl) {
       Alert.alert('Error', 'No media selected');
       return;
     }
-
+    if (!categoryId) {
+      Alert.alert('Error', 'Please select a category');
+      return;
+    }
+    if (!language) {
+      Alert.alert('Error', 'Please select a language');
+      return;
+    }
+ 
     try {
       const formData = new FormData();
-
+ 
       // File
       formData.append('file', {
         uri: mediaUrl,
         name: mediaType === 'video' ? 'upload.mp4' : 'upload.jpg',
         type: mediaType === 'video' ? 'video/mp4' : 'image/jpeg',
       } as any);
-
-      // Dynamic fields from state
-      formData.append('language', language || 'English');
-      formData.append('category', category && category !== '' ? category : 'General');
-
-      // Tags
-      if (tags.length > 0) {
-        formData.append('tags', JSON.stringify(tags));
-      }
-
-      // Media type
+ 
+      // Fields
+      formData.append('language', language);
+      formData.append('categoryId', categoryId); // sending ID instead of name
       formData.append('type', mediaType);
-
+ 
       const token = await AsyncStorage.getItem('userToken');
-      const res = await axios.post('http://192.168.1.4:5000/api/creator/feed/upload', formData, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
-      });
-
+      const res = await axios.post(
+        'http://192.168.1.4:5000/api/creator/feed/upload',
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+ 
       if (res.status === 201) {
         Alert.alert('Success', 'Post uploaded successfully');
         navigation.navigate('DrawerNavigation', { screen: 'Home' });
@@ -85,7 +116,7 @@ const Nextpage = ({ route, navigation }: NextpageScreenProps) => {
       Alert.alert('Error', error.response?.data?.message || 'Upload failed');
     }
   };
-
+ 
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
       <SafeAreaView style={{ backgroundColor: colors.card, flex: 1 }}>
@@ -131,15 +162,20 @@ const Nextpage = ({ route, navigation }: NextpageScreenProps) => {
                       width: '100%',
                       resizeMode: 'contain',
                     }}
-                    source={IMAGES.profilepic11} // Fallback image
+                    source={IMAGES.profilepic11}
                   />
                 )}
               </View>
             </View>
-
+ 
             {/* Language Picker */}
             <View style={[GlobalStyleSheet.container]}>
-              <Text style={[GlobalStyleSheet.inputlable, { color: colors.title, fontWeight: 'bold', fontSize: 15 }]}>
+              <Text
+                style={[
+                  GlobalStyleSheet.inputlable,
+                  { color: colors.title, fontWeight: 'bold', fontSize: 15 },
+                ]}
+              >
                 Select Language
               </Text>
               <View
@@ -161,75 +197,42 @@ const Nextpage = ({ route, navigation }: NextpageScreenProps) => {
                 </Picker>
               </View>
             </View>
-
-            {/* Tags Input */}
-            <View style={[GlobalStyleSheet.container, { marginTop: -26 }]}>
-              <Text style={[GlobalStyleSheet.inputlable, { color: colors.title, fontWeight: 'bold', fontSize: 15 }]}>
-                Enter Tags
-              </Text>
-
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <View
-                  style={[
-                    GlobalStyleSheet.inputBox,
-                    {
-                      flex: 1,
-                      borderColor: colors.border,
-                      borderWidth: 1,
-                      paddingHorizontal: 10,
-                      marginRight: 10,
-                    },
-                  ]}
-                >
-                  <TextInput
-                    placeholder="Type here..."
-                    value={tagInput}
-                    onChangeText={setTagInput}
-                    style={[GlobalStyleSheet.input, { color: colors.title, paddingVertical: 10 }]}
-                  />
-                </View>
-
-                <TouchableOpacity
-                  onPress={handleAddTag}
-                  style={{
-                    backgroundColor: colors.primary,
-                    paddingVertical: 12,
-                    paddingHorizontal: 20,
-                    borderRadius: 10,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginTop: -16,
-                  }}
-                >
-                  <Text style={{ color: '#fff', fontWeight: '600' }}>Add</Text>
-                </TouchableOpacity>
-              </View>
-
-              {tags.length > 0 && (
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
-                  {tags.map((tag, index) => (
-                    <View
-                      key={index}
-                      style={{
-                        backgroundColor: colors.primary,
-                        paddingHorizontal: 12,
-                        paddingVertical: 6,
-                        borderRadius: 20,
-                        marginRight: 8,
-                        marginBottom: 8,
-                      }}
-                    >
-                      <Text style={{ color: '#fff' }}>#{tag}</Text>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </View>
+ 
+            {/* Category Picker */}
+            <View
+  style={[
+    GlobalStyleSheet.inputBox,
+    { borderColor: colors.border, borderWidth: 1, paddingHorizontal: 10 },
+  ]}
+>
+  {loadingCategories ? (
+    <Text style={{ color: colors.text }}>Loading categories...</Text>
+  ) : (
+    <Picker
+  selectedValue={categoryId}
+  onValueChange={(itemValue) => setCategoryId(itemValue)}
+  style={{ color: colors.title }}
+>
+  <Picker.Item label="Choose Category" value="" />
+  {categories.map((cat) => (
+    <Picker.Item
+      key={cat.categoryId}
+      label={cat.categoriesName}
+      value={cat.categoryId}
+    />
+  ))}
+</Picker>
+ 
+  )}
+</View>
+ 
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </ScrollView>
   );
 };
-
+ 
 export default Nextpage;
+ 
+ 

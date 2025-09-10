@@ -15,9 +15,10 @@ type Props = {
     state: any,
     navigation: any,
     descriptors: any
+    postListRef: any;
 }
 
-const BottomTab = ({ state, descriptors, navigation }: Props) => {
+const BottomTab = ({ state, descriptors, navigation, postListRef }: Props) => {
 
     const theme = useTheme();
     const { colors }: { colors: any } = theme;
@@ -25,6 +26,21 @@ const BottomTab = ({ state, descriptors, navigation }: Props) => {
     const [tabWidth, setWidth] = useState(wp('100%'));
     const [profilePic, setProfilePic] = useState<string | null>(null);  //new here 
 
+    const lastTap = useRef<number>(0);
+
+  
+  const handleHomePress = () => {
+    const now = Date.now();
+    const DOUBLE_PRESS_DELAY = 300;
+
+    if (lastTap.current && now - lastTap.current < DOUBLE_PRESS_DELAY) {
+      postListRef.current?.scrollToTop(); //  works now
+    } else {
+      navigation.navigate('Home');
+    }
+
+    lastTap.current = now;
+  };
     const tabWD =
         tabWidth < SIZES.container ? tabWidth / 5 : SIZES.container / 5;
 
@@ -36,44 +52,44 @@ const BottomTab = ({ state, descriptors, navigation }: Props) => {
         setWidth(val.window.width);
     });
 
-    // ✅ fetch profile image from backend like in Profile screen
-   const fetchProfilePic = async () => {
-  try {
-    const userToken = await AsyncStorage.getItem('userToken'); 
-    if (!userToken) {
-      console.warn("No user token found in AsyncStorage");
-      return;
-    }
+    //  fetch profile image from backend like in Profile screen
+    const fetchProfilePic = async () => {
+        try {
+            const userToken = await AsyncStorage.getItem('userToken');
+            if (!userToken) {
+                console.warn("No user token found in AsyncStorage");
+                return;
+            }
 
-    const res = await fetch("http://192.168.1.4:5000/api/get/profile/detail", {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${userToken}`, // pass token here
-        "Content-Type": "application/json",
-      },
-    });
+            const res = await fetch("https://deploy-backend-z7sw.onrender.com/api/get/profile/detail", {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${userToken}`, // pass token here
+                    "Content-Type": "application/json",
+                },
+            });
 
-    if (!res.ok) {
-      console.error(`Failed to fetch profile: ${res.status} ${res.statusText}`);
-      return;
-    }
+            if (!res.ok) {
+                console.error(`Failed to fetch profile: ${res.status} ${res.statusText}`);
+                return;
+            }
 
-    const data = await res.json();
+            const data = await res.json();
 
-    if (data?.profile) {
-      const profileData = data.profile;
-      const fixedAvatar = profileData.profileAvatar
- 
+            if (data?.profile) {
+                const profileData = data.profile;
+                const fixedAvatar = profileData.profileAvatar
 
-      setProfilePic(fixedAvatar);
 
-      // If you want the full details, store them in state too
-    //   setProfileDetails(profileData); 
-    }
-  } catch (err) {
-    console.error("Error fetching profile picture:", err);
-  }
-};
+                setProfilePic(fixedAvatar);
+
+                // If you want the full details, store them in state too
+                //   setProfileDetails(profileData); 
+            }
+        } catch (err) {
+            console.error("Error fetching profile picture:", err);
+        }
+    };
 
 
     useEffect(() => {
@@ -170,6 +186,12 @@ const BottomTab = ({ state, descriptors, navigation }: Props) => {
                                 target: route.key,
                                 canPreventDefault: true,
                             });
+
+                            // Special double-tap for Home
+                            if (label === 'Home') {
+                                handleHomePress();
+                                return;
+                            }
 
                             // 👇 Special case for createpost 
                             if (label === 'Reels') {

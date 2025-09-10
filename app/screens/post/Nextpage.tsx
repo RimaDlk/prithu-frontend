@@ -43,7 +43,7 @@ const [loadingCategories, setLoadingCategories] = useState(true);
 useEffect(() => {
   const fetchCategories = async () => {
     try {
-      const res = await axios.get('http://192.168.1.4:5000/api/creator/get/feed/category');
+      const res = await axios.get('https://deploy-backend-z7sw.onrender.com/api/creator/get/feed/category');
       console.log("ddd", res.data);
 
       if (Array.isArray(res.data)) {
@@ -88,7 +88,7 @@ useEffect(() => {
  
      // Fields
 formData.append('language', language);
-formData.append('category', categoryId); // sending ID instead of name
+formData.append('categoryId', categoryId); // sending ID instead of name
 formData.append('type', mediaType);
 
 // 🔹 Debug: log as JSON
@@ -100,7 +100,8 @@ console.log('FormData JSON:', JSON.stringify(formDataJSON, null, 2));
 
 const token = await AsyncStorage.getItem('userToken');
 const res = await axios.post(
-  'http://192.168.1.4:5000/api/creator/feed/upload',
+  // 'https://deploy-backend-z7sw.onrender.com/api/creator/feed/upload',
+  'http://192.168.1.4:5000/api/creator/feed/upload', 
   formData,
   {
     headers: {

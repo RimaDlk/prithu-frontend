@@ -17,23 +17,29 @@ function BottomNavigation() {
     const theme = useTheme();
     const {colors} = theme;
     
-    return (
-        <SafeAreaView style={{flex:1,backgroundColor:colors.card}}>
-            <Tab.Navigator
-                initialRouteName='Home'
-                screenOptions={{
-                    headerShown: false
-                }}
-                tabBar={props => <BottomTab {...props} />}
-            >
-                <Tab.Screen name="Home" component={HomeScreen} />
-                <Tab.Screen name="Search" component={Search} />
-                <Tab.Screen name="Reels" component={Reels} />
-                <Tab.Screen name="Chat" component={Chat} />
-                <Tab.Screen name="Profile" component={Profile} />
-            </Tab.Navigator>
-        </SafeAreaView>
-    );
+    //  create ref here
+  const postListRef = React.useRef<any>(null);
+
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.card }}>
+      <Tab.Navigator
+        initialRouteName="Home"
+        screenOptions={{ headerShown: false }}
+        //  pass postListRef to BottomTab
+        tabBar={(props) => <BottomTab {...props} postListRef={postListRef} />}
+      >
+        <Tab.Screen name="Home">
+          {(props) => <HomeScreen {...props} postListRef={postListRef} />}
+        </Tab.Screen>
+        <Tab.Screen name="Search" component={Search} />
+        <Tab.Screen name="Reels" component={Reels} />
+        <Tab.Screen name="Chat" component={Chat} />
+        <Tab.Screen name="Profile" component={Profile} />
+      </Tab.Navigator>
+    </SafeAreaView>
+  );
+
 }
 
 export default BottomNavigation;

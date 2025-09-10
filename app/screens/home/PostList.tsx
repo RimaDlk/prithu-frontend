@@ -11,6 +11,8 @@ import { View, Dimensions, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import PostCard from '../../components/PostCard';
+import { ScrollView } from 'react-native';
+import PostoptionSheet from '../../components/bottomsheet/PostoptionSheet';
 
 const { height: windowHeight } = Dimensions.get('window');
 
@@ -31,6 +33,48 @@ const PostList = forwardRef((props: any, ref: any) => {
 
   const boxRefs = useRef<any>({});
 
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const optionSheetRef = useRef(null);
+
+
+  const handleNotInterested = async (postId: string) => {
+  try {
+    const token = await AsyncStorage.getItem("userToken");
+    if (!token) return;
+
+    // 1. Update UI immediately
+    setPosts(prev => prev.filter(post => post._id !== postId));
+
+    // 2. Tell backend
+    await axios.post(
+      "https://deploy-backend-z7sw.onrender.com/api/user/not/intrested", // your backend route
+      { feedId: postId },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("Post marked as not interested:", postId);
+  } catch (error) {
+    console.error("Error marking not interested:", error);
+  }
+};
+
+useEffect(() => {
+  console.log("selectedPostId changed:", selectedPostId);
+  if (selectedPostId && optionSheetRef.current) {
+    console.log("Opening sheet");
+    optionSheetRef.current.openSheet();
+  }
+}, [selectedPostId]);
+
+
+
+
   // ✅ Fetch posts with token
   const fetchPosts = async () => {
   try {
@@ -40,7 +84,7 @@ const PostList = forwardRef((props: any, ref: any) => {
       return;
     }
 
-  const res = await axios.get('http://192.168.1.4:5000/api/get/all/feeds/user', {
+  const res = await axios.get('https://deploy-backend-z7sw.onrender.com/api/get/all/feeds/user', {
   headers: {
     Authorization: `Bearer ${token}`,
   },
@@ -92,20 +136,23 @@ const PostList = forwardRef((props: any, ref: any) => {
 
 
   // ✅ Expose methods to parent
-  useImperativeHandle(ref, () => ({
-    refreshPosts: async () => {
-      setRefreshingTop(true);
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-      await fetchPosts();
-      setRefreshingTop(false);
-    },
-    handleScroll: (e: any) => handleScroll(e),
-    handlePull: (e: any) => {
-      const offsetY = e.nativeEvent.contentOffset.y;
-      if (offsetY < -50 && !refreshingTop) setRefreshingTop(true); // show instantly
-      if (offsetY >= 0 && refreshingTop) setRefreshingTop(false); // hide when released
-    },
-  }));
+useImperativeHandle(ref, () => ({
+  scrollToTop: () => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  },
+  refreshPosts: async () => {
+    setRefreshingTop(true);
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await fetchPosts();
+    setRefreshingTop(false);
+  },
+  handleScroll: (e: any) => handleScroll(e),
+  handlePull: (e: any) => {
+    const offsetY = e.nativeEvent.contentOffset.y;
+    if (offsetY < -50 && !refreshingTop) setRefreshingTop(true);
+    if (offsetY >= 0 && refreshingTop) setRefreshingTop(false);
+  },
+}));
 
   useEffect(() => {
     const loadInitial = async () => {
@@ -156,6 +203,12 @@ const PostList = forwardRef((props: any, ref: any) => {
   }
 
   return (
+
+     <ScrollView
+    ref={scrollViewRef} // assign ref
+    onScroll={handleScroll}
+    scrollEventThrottle={16}
+  >
     <View>
       {/* Instant pull-down loader */}
       {refreshingTop && (
@@ -182,12 +235,14 @@ const PostList = forwardRef((props: any, ref: any) => {
             profileimage={post.creatorAvatar || null}
             date={post.timeAgo}
             postimage={[{ image: post.contentUrl }]}
-            like={post.likesCount}
+            like={post.likesCount}  
             comment={post.comments?.length || 0}
             posttitle={post.caption}
             posttag={post.tags?.join(' ')}
             sheetRef={props.sheetRef}
-            optionSheet={props.optionSheet}
+            // optionSheet={props.optionSheet}
+             optionSheet={optionSheetRef}    
+             setSelectedPostId={setSelectedPostId} //for not instrested section
             hasStory={false}
             reelsvideo={null}
             caption={post.caption}
@@ -197,6 +252,14 @@ const PostList = forwardRef((props: any, ref: any) => {
         </View>
       ))}
     </View>
+
+  <PostoptionSheet
+       ref={optionSheetRef}   // ✅ use local ref
+      postId={selectedPostId}
+      onNotInterested={handleNotInterested}
+    />
+
+    </ScrollView>
   );
 });
 

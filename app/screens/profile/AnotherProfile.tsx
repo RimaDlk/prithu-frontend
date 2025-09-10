@@ -22,7 +22,7 @@
 //       const token = await AsyncStorage.getItem("userToken");
 
 //       const res = await fetch(
-//         `http://192.168.1.4:5000/api/get/creator/detail/feed/${feedId}`,
+//         `https://deploy-backend-z7sw.onrender.com/api/get/creator/detail/feed/${feedId}`,
 //         {
 //           method: "GET",
 //           headers: {
@@ -70,7 +70,7 @@
 //             onPress={() => navigation.navigate("ProfilePost", { postId: item._id })}
 //           >
 //             <Image
-//               source={{ uri: `http://192.168.1.4:5000/${item.imagePath}` }}
+//               source={{ uri: `https://deploy-backend-z7sw.onrender.com/${item.imagePath}` }}
 //               style={{ width: "100%", height: "100%" }}
 //             />
 //           </TouchableOpacity>
@@ -124,7 +124,7 @@ useEffect(() => {
     if (!feedId) return;
     try {
       const res = await fetch(
-        `http://192.168.1.4:5000/api/get/creator/detail/feed/${feedId}`
+        `https://deploy-backend-z7sw.onrender.com/api/get/creator/detail/feed/${feedId}`
       );
       const result = await res.json();
 
@@ -374,7 +374,7 @@ useEffect(() => {
                   <Image
                     style={{ width: "100%", aspectRatio: 1 }}
                     source={{
-                      uri: `http://192.168.1.4:5000/${item.imagePath}`,
+                      uri: `https://deploy-backend-z7sw.onrender.com/${item.imagePath}`,
                     }}
                   />
                 </TouchableOpacity>
@@ -401,7 +401,7 @@ useEffect(() => {
                   <Image
                     style={{ width: "100%", aspectRatio: 1 / 1.9 }}
                     source={{
-                      uri: `http://192.168.1.4:5000/${item.videoThumb}`,
+                      uri: `https://deploy-backend-z7sw.onrender.com/${item.videoThumb}`,
                     }}
                   />
                 </TouchableOpacity>

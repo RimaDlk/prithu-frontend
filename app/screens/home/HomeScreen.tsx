@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import {
   View,
   SafeAreaView,
@@ -20,42 +20,62 @@ import { useFocusEffect } from '@react-navigation/native';
 
 const { height: windowHeight } = Dimensions.get('window');
 
-const HomeScreen = () => {
+interface HomeScreenProps {
+  postListRef: React.RefObject<any>; // ✅ receive the ref from BottomNavigation
+}
+
+const HomeScreen = ({ postListRef }: HomeScreenProps) => {
   const theme = useTheme();
   const { colors }: { colors: any } = theme;
 
   const sheetRef = useRef<any>();
   const moresheet = useRef<any>();
-  const scrollRef = useRef<any>();
+  const scrollRef = useRef<ScrollView>(null);
+    const optionSheetRef = useRef(null);
 
   const [refreshing, setRefreshing] = useState(false);
 
+  //  Expose scrollToTop so BottomNavigation can call it
+  useEffect(() => {
+    if (postListRef) {
+      postListRef.current = {
+        scrollToTop: () => {
+          scrollRef.current?.scrollTo({ y: 0, animated: true });
+        },
+        refreshPosts: async () => {
+          if (postListRef.current?.refreshPosts) {
+            await postListRef.current.refreshPosts();
+          }
+        },
+      };
+    }
+  }, [postListRef]);
+
   // ✅ Android Back Button
-useFocusEffect(
-  React.useCallback(() => {
-    const backAction = () => {
-      Alert.alert('Exit App', 'Are you sure you want to exit?', [
-        { text: 'Cancel', onPress: () => null, style: 'cancel' },
-        { text: 'YES', onPress: () => BackHandler.exitApp() },
-      ]);
-      return true;
-    };
+  useFocusEffect(
+    React.useCallback(() => {
+      const backAction = () => {
+        Alert.alert('Exit App', 'Are you sure you want to exit?', [
+          { text: 'Cancel', onPress: () => null, style: 'cancel' },
+          { text: 'YES', onPress: () => BackHandler.exitApp() },
+        ]);
+        return true;
+      };
 
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      backAction
-    );
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        backAction
+      );
 
-    return () => backHandler.remove();
-  }, [])
-);
-
+      return () => backHandler.remove();
+    }, [])
+  );
 
   // ✅ Pull to Refresh
   const onRefresh = async () => {
     setRefreshing(true);
-    if (scrollRef.current?.refreshPosts) {
-      await scrollRef.current.refreshPosts(); // call PostList refresh
+    if (postListRef.current?.refreshPosts) {
+      await postListRef.current.refreshPosts(); // call PostList refresh
     }
     setRefreshing(false);
   };
@@ -93,14 +113,6 @@ useFocusEffect(
           paddingRight: 10,
           paddingLeft: 10,
         }}
-        onScroll={(e) => {
-          if (scrollRef.current?.handleScroll) {
-            scrollRef.current.handleScroll(e);
-          }
-          if (scrollRef.current?.handlePull) {
-            scrollRef.current.handlePull(e); // detect pull down
-          }
-        }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -110,7 +122,7 @@ useFocusEffect(
         }
       >
         <View style={{ height: windowHeight * 0.2 }} />
-        <PostList sheetRef={sheetRef} optionSheet={moresheet} ref={scrollRef} />
+        <PostList sheetRef={sheetRef} optionSheet={optionSheetRef} />
       </ScrollView>
 
       <PostShareSheet ref={sheetRef} />

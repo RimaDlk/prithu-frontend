@@ -15,7 +15,7 @@ const Reels = () => {
   useEffect(() => {
     const fetchReels = async () => {
       try {
-        const res = await axios.get('http://192.168.1.4:5000/api/all/feeds');
+        const res = await axios.get('https://deploy-backend-z7sw.onrender.com/api/all/feeds');
         // ✅ Only keep videos
         const videoFeeds = res.data.feeds.filter((feed: any) => feed.type === 'video');
         setReelsData(videoFeeds);

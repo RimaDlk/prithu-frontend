@@ -58,7 +58,7 @@ const FeedScreen: React.FC = () => {
             const token = await AsyncStorage.getItem("userToken");
 
             // Send to backend
-            const response = await fetch("http://192.168.1.4:5000/api/feed/language", {
+            const response = await fetch("https://deploy-backend-z7sw.onrender.com/api/feed/language", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

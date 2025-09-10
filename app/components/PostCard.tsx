@@ -34,11 +34,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
-const PostCard = ({ id, name, profileimage, date, postimage, like, comment, posttitle, posttag, sheetRef, optionSheet, hasStory, reelsvideo, caption, background, visibleBoxes }: any) => {
+const PostCard = ({ id, name, profileimage, date, postimage, like, comment, posttitle, posttag, sheetRef, optionSheet, hasStory, reelsvideo, caption, background, visibleBoxes,setSelectedPostId }: any) => {
 
 
 
     const navigation = useNavigation<any>();
+  
+
 
     // ✅ Account type state
     const [activeAccountType, setActiveAccountType] = useState<string | null>(null);
@@ -93,7 +95,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
 
 
-            const res = await fetch('http://192.168.1.4:5000/api/get/profile/detail', {
+            const res = await fetch('https://deploy-backend-z7sw.onrender.com/api/get/profile/detail', {
 
                 method: 'GET',
 
@@ -178,55 +180,51 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
 
 
-  const handleLike = async () => {
- console.log("➡️ handleLike triggered"); // ✅ check if button works
-
+ const handleLike = async () => {
   try {
     const userToken = await AsyncStorage.getItem('userToken');
     const accountType = await AsyncStorage.getItem('activeAccountType');
-
-
-    console.log("📌 userToken:", userToken);
-    console.log("📌 accountType:", accountType);
-    console.log("📌 feedId:", id);
 
     if (!userToken || !accountType) {
       Alert.alert('Error', 'User not authenticated or account type missing');
       return;
     }
 
-    // Optimistic UI update
-    setIsLiked(!isLiked);
-    setLikeCount(prev => (isLiked ? prev - 1 : prev + 1));
+    // Toggle UI optimistically
+    const newLikeState = !isLiked;
+    setIsLiked(newLikeState);
+    setLikeCount(prev => newLikeState ? prev + 1 : prev - 1);
 
     const endpoint =
       accountType === 'Personal'
-        ? 'http://192.168.1.4:5000/api/user/feed/like'
-        : 'http://192.168.1.4:5000/api/creator/feed/like';
+        ? 'https://deploy-backend-z7sw.onrender.com/api/user/feed/like'
+        : 'https://deploy-backend-z7sw.onrender.com/api/creator/feed/like';
 
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${userToken}`, //  token attached
+        Authorization: `Bearer ${userToken}`,
       },
-      body: JSON.stringify({ feedId: id }), //  only feedId,
+      body: JSON.stringify({ feedId: id }),
     });
 
     const data = await res.json();
-    console.log("📌 Like API response:", data);
-
-    if (res.ok) {
-      console.log(`${accountType} feed like updated:`, data.message);
-    } else {
-      console.log('❌ Error liking feed:', data.message);
-      Alert.alert('Error', data.message || 'Failed to like feed');
+    if (!res.ok) {
+      // revert if failed
+      setIsLiked(!newLikeState);
+      setLikeCount(prev => newLikeState ? prev - 1 : prev + 1);
+      Alert.alert('Error', data.message || 'Failed to like/unlike post');
     }
   } catch (error) {
-    console.error('❌ Like feed error:', error);
-    Alert.alert('Error', 'Something went wrong while liking feed');
+    console.error('Like error:', error);
+    // revert
+    setIsLiked(!isLiked);
+    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+    Alert.alert('Error', 'Something went wrong while liking post');
   }
 };
+
 
 
   return (
@@ -347,7 +345,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                 </View>
 
-                <View style={{ flexDirection: 'row' }}>
+              
 
                     {/* <TouchableOpacity
 
@@ -374,22 +372,20 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
                         />
 
                     </TouchableOpacity> */}
+                <View style={{ flexDirection: 'row' }}>
 
-                    <TouchableOpacity
+<TouchableOpacity
+  onPress={() => {
+    setSelectedPostId?.(id); // sheet will open automatically in useEffect
+    console.log("worked")
+  }}
+>
+  <Image
+    style={{ width: 18, height: 18, margin: 10, tintColor: colors.title }}
+    source={IMAGES.more}
+  />
+</TouchableOpacity>
 
-                        onPress={() => optionSheet.current.openSheet()}
-
-                    >
-
-                        <Image
-
-                            style={{ width: 18, height: 18, margin: 10, tintColor: colors.title, }}
-
-                            source={IMAGES.more}
-
-                        />
-
-                    </TouchableOpacity>
 
                 </View>
 
@@ -711,6 +707,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
     onPress={handleLike} // pass it directly
     color={isLiked ? colors.primary : colors.title}
     sizes={'sm'}
+    liked={isLiked}
   />
   <TouchableOpacity >
     <Text style={[GlobalStyleSheet.postlike, { color: colors.title }]}>
@@ -909,8 +906,8 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
                                     // pick endpoint based on role
                                     const endpoint =
                                         accountType === 'Personal'
-                                            ? 'http://192.168.1.4:5000/api/user/feed/save'
-                                            : 'http://192.168.1.4:5000/api/creator/feed/save';
+                                            ? 'https://deploy-backend-z7sw.onrender.com/api/user/feed/save'
+                                            : 'https://deploy-backend-z7sw.onrender.com/api/creator/feed/save';
 
                                     const res = await fetch(endpoint, {
                                         method: 'POST',
@@ -985,7 +982,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
             </View>
 
-            {/* <CommentSheet ref={commentSheetRef} />  */}
+            <CommentSheet ref={commentSheetRef} /> 
 
         </View>
 

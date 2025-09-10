@@ -6,21 +6,21 @@ import { FONTS, IMAGES } from '../../constants/theme';
 import { useTheme } from '@react-navigation/native';
 
 
-const PostoptionSheet = (props:any, ref:any) => {
+const PostoptionSheet = (props: any, ref: any) => {
     // ref
     const bottomSheetRef = useRef<any>(null);
 
     // variables
-    const snapPoints = useMemo(() => ['25%'], []);
+    const snapPoints = useMemo(() => ['50%'], []);
 
     // callbacks
-    const handleSheetChanges = useCallback((index:any) => {
+    const handleSheetChanges = useCallback((index: any) => {
         console.log('handleSheetChanges', index);
     }, []);
 
     // renders
     const renderBackdrop = useCallback(
-        (props:any) => (
+        (props: any) => (
             <BottomSheetBackdrop
                 {...props}
                 disappearsOnIndex={-1}
@@ -30,17 +30,20 @@ const PostoptionSheet = (props:any, ref:any) => {
     );
 
 
-    useImperativeHandle(ref, () => ({
-        // methods connected to `ref`
-        openSheet: () => { openSheet() }
-    }))
-    // internal method
+
     const openSheet = () => {
         bottomSheetRef.current.snapToIndex(0)
     }
 
+
+    useImperativeHandle(ref, () => ({
+        // methods connected to `ref`
+        openSheet
+    }))
+    // internal method
+
     const theme = useTheme();
-    const { colors } : {colors : any} = theme;
+    const { colors }: { colors: any } = theme;
 
     return (
         <BottomSheet
@@ -50,11 +53,11 @@ const PostoptionSheet = (props:any, ref:any) => {
             snapPoints={snapPoints}
             onChange={handleSheetChanges}
             backdropComponent={renderBackdrop}
-            handleStyle={{ top:0 }}
-            handleIndicatorStyle={{ backgroundColor:colors.border, width: 92 }}
+            handleStyle={{ top: 0 }}
+            handleIndicatorStyle={{ backgroundColor: colors.border, width: 92 }}
             backgroundStyle={{ backgroundColor: colors.card }}
         >
-            
+
             <BottomSheetView style={GlobalStyleSheet.container}>
                 <TouchableOpacity style={GlobalStyleSheet.TouchableOpacity}>
                     <Image
@@ -63,13 +66,27 @@ const PostoptionSheet = (props:any, ref:any) => {
                     />
                     <Text style={GlobalStyleSheet.text}>Report</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={GlobalStyleSheet.TouchableOpacity}>
+
+                <TouchableOpacity
+                    style={GlobalStyleSheet.TouchableOpacity}
+                    onPress={async () => {
+                        if (props.onNotInterested && props.postId) {
+                            await props.onNotInterested(props.postId);
+                        }
+                        bottomSheetRef.current.close(); // close sheet after action
+                    }}
+                >
                     <Image
-                        style={[GlobalStyleSheet.image,{tintColor:colors.title}]}
+                        style={[GlobalStyleSheet.image, { tintColor: colors.title }]}
                         source={IMAGES.eyeclose}
                     />
-                    <Text style={[GlobalStyleSheet.text,{color:colors.title}]}>Not Intrested</Text>
+                    <Text style={[GlobalStyleSheet.text, { color: colors.title }]}>
+                        Not Interested
+                    </Text>
                 </TouchableOpacity>
+
+
+
                 <TouchableOpacity style={GlobalStyleSheet.TouchableOpacity}>
                     <Image
                         style={[GlobalStyleSheet.image, { tintColor: colors.title }]}
@@ -84,7 +101,7 @@ const PostoptionSheet = (props:any, ref:any) => {
                         <Image
                             style={[GlobalStyleSheet.image, { tintColor: colors.title }]}
                             source={IMAGES.close}
-                            />
+                        />
                         <Text style={[GlobalStyleSheet.text, { color: colors.title }]}>Hide post</Text>
                     </TouchableOpacity>
                 }

@@ -51,7 +51,7 @@ const EditProfile = () => {
         return;
       }
 
-      const res = await fetch('http://192.168.1.4:5000/api/get/profile/detail', {
+      const res = await fetch('https://deploy-backend-z7sw.onrender.com/api/get/profile/detail', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -152,7 +152,7 @@ const handleSave = async () => {
       } as any);
     }
 
-    const res = await fetch('http://192.168.1.4:5000/api/user/profile/detail/update', {
+    const res = await fetch('https://deploy-backend-z7sw.onrender.com/api/user/profile/detail/update', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

@@ -254,23 +254,27 @@ useEffect(() => {
             >
               @{profile?.userName || "username"}
             </Text>
-            {/* <Text
-  style={{
-    ...FONTS.font,
-    ...FONTS.fontRegular,
-    color: COLORS.white,
-    opacity: 0.8,
-    marginTop: 8,
-    textAlign: "center",
-    paddingHorizontal: 20,
-  }}
->
-  {profile?.bio || ""}
-</Text> */}
 
           </View>
         </View>
       </ImageBackground>
+{/* 
+{profile.bio ? (
+  <View style={{ marginTop: 15, marginHorizontal: 20 }}>
+    <Text
+      style={{
+        ...FONTS.font,
+        fontSize: 14,
+        lineHeight: 20,
+        color: colors.title,
+        textAlign: "center",
+      }}
+    >
+      {profile.bio}
+    </Text>
+  </View>
+) : null} */}
+ 
 
       {/* 🔹 Buttons */}
       <View

@@ -164,6 +164,7 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
       if (res.ok && data.profile) {
         const profileData = data.profile;
         const fixedAvatar = profileData.profileAvatar
+        console.log(fixedAvatar)
          
 
         setProfile({
@@ -389,7 +390,7 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 20 }}>
           <Followbtn
             onPress={() => navigation.navigate('Suggestions')}
-            title='profile Dashboard'
+            title='professional Dashboard'
           />
           <Sharebtn
             onPress={onShare}

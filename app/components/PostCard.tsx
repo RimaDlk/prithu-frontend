@@ -32,19 +32,16 @@ import CommentSheet from '../screens/comment/CommentSheet';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
- 
 
- 
-
- 
 
 const PostCard = ({ id, name, profileimage, date, postimage, like, comment, posttitle, posttag, sheetRef, optionSheet, hasStory, reelsvideo, caption, background, visibleBoxes }: any) => {
 
- 
+
 
     const navigation = useNavigation<any>();
+    const [activeAccountType, setActiveAccountType] = useState<string | null>(null);
 
- 
+
 
     const [profile, setProfile] = useState<any>({
 
@@ -58,118 +55,128 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
         profileAvatar: '',
 
-      });
+    });
 
- 
+       // 🔹 Fetch active account type once
+          useEffect(() => {
+              const fetchAccountType = async () => {
+                  try {
+                      const storedType = await AsyncStorage.getItem("activeAccountType");
+                      console.log(storedType)
+                      if (storedType) setActiveAccountType(storedType);
+                  } catch (err) {
+                      console.log("Error fetching account type:", err);
+                  }
+              };
+              fetchAccountType();
+          }, []);
 
- 
+    const fetchProfile = async () => {
 
-        const fetchProfile = async () => {
+        try {
 
-    try {
+            const userToken = await AsyncStorage.getItem('userToken');
 
-      const userToken = await AsyncStorage.getItem('userToken');
+            if (!userToken) {
 
-      if (!userToken) {
+                Alert.alert('Error', 'User not authenticated');
 
-        Alert.alert('Error', 'User not authenticated');
+                return;
 
-        return;
+            }
 
-      }
 
- 
 
-      const res = await fetch('http://192.168.1.4:5000/api/get/profile/detail', {
+            const res = await fetch('http://192.168.1.4:5000/api/get/profile/detail', {
 
-        method: 'GET',
+                method: 'GET',
 
-        headers: {
+                headers: {
 
-          Authorization: `Bearer ${userToken}`,
+                    Authorization: `Bearer ${userToken}`,
 
-        },
+                },
 
-      });
+            });
 
-      const data = await res.json();
+            const data = await res.json();
 
- 
 
-      if (res.ok && data.profile) {
 
-        const profileData = data.profile;
+            if (res.ok && data.profile) {
 
-        const fixedAvatar = profileData.profileAvatar
+                const profileData = data.profile;
 
-    
-        setProfile({
+                const fixedAvatar = profileData.profileAvatar
 
-          displayName: profileData.displayName || '',
 
-          username: data.userName || '',
+                setProfile({
 
-          bio: profileData.bio || '',
+                    displayName: profileData.displayName || '',
 
-          balance: profileData.balance || '',
+                    username: data.userName || '',
 
-          profileAvatar: fixedAvatar,
+                    bio: profileData.bio || '',
 
-        });
+                    balance: profileData.balance || '',
 
-      } else {
+                    profileAvatar: fixedAvatar,
 
-        console.log('Error fetching profile:', data.message);
+                });
 
-        Alert.alert('Error', data.message || 'Failed to fetch profile');
+            } else {
 
-      }
+                console.log('Error fetching profile:', data.message);
 
-    } catch (err) {
+                Alert.alert('Error', data.message || 'Failed to fetch profile');
 
-      console.error('Fetch profile error:', err);
+            }
 
-      Alert.alert('Error', 'Failed to fetch profile');
+        } catch (err) {
 
-    }
+            console.error('Fetch profile error:', err);
 
-  };
+            Alert.alert('Error', 'Failed to fetch profile');
 
- 
+        }
 
-  useEffect(() => {
+    };
 
-    fetchProfile();
 
-  }, []);
 
- 
+    useEffect(() => {
+
+        fetchProfile();
+
+    }, []);
+
+
 
     const theme = useTheme();
 
     const { colors }: { colors: any } = theme;
 
- 
+
 
     const [isShow, setIsShow] = useState(false);
 
- 
+
 
     const [show, setshow] = React.useState(true);
 
- 
+
 
     const [mute, setmute] = React.useState(false);
 
- 
+
 
     const video = React.useRef(null);
 
- 
+
 
     const commentSheetRef = useRef(null);
 
- 
+
 
     return (
 
@@ -227,7 +234,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                                         />
 
- 
+
 
                                         <Image
 
@@ -259,13 +266,13 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                                         />
 
- 
+
 
                                     </View>
 
                             }
 
- 
+
 
                         </TouchableOpacity>
 
@@ -347,7 +354,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                     }}
 
- 
+
 
                     onPress={() => navigation.navigate('Reels')}
 
@@ -461,183 +468,183 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                         </View>
 
- 
+
 
                     </View>
 
                     :
 
-                  <View
+                    <View
 
-  style={{
+                        style={{
 
-    height:
+                            height:
 
-      SIZES.width < SIZES.container
+                                SIZES.width < SIZES.container
 
-        ? SIZES.width - SIZES.width * 0.04
+                                    ? SIZES.width - SIZES.width * 0.04
 
-        : SIZES.container - SIZES.container * 0.1,
+                                    : SIZES.container - SIZES.container * 0.1,
 
-    position: "relative",
+                            position: "relative",
 
-  }}
+                        }}
 
->
+                    >
 
-  <Swiper
+                        <Swiper
 
-    height={"auto"}
+                            height={"auto"}
 
-    showsButtons={false}
+                            showsButtons={false}
 
-    loop={false}
+                            loop={false}
 
-    paginationStyle={{
+                            paginationStyle={{
 
-      bottom: 10,
+                                bottom: 10,
 
-    }}
+                            }}
 
-    dotStyle={{
+                            dotStyle={{
 
-      width: 5,
+                                width: 5,
 
-      height: 5,
+                                height: 5,
 
-      backgroundColor: "rgba(255, 255, 255, 0.40)",
+                                backgroundColor: "rgba(255, 255, 255, 0.40)",
 
-    }}
+                            }}
 
-    activeDotStyle={{
+                            activeDotStyle={{
 
-      width: 6,
+                                width: 6,
 
-      height: 6,
+                                height: 6,
 
-      backgroundColor: "#fff",
+                                backgroundColor: "#fff",
 
-    }}
+                            }}
 
-  >
+                        >
 
-    {postimage.map((data: any, index: any) => {
+                            {postimage.map((data: any, index: any) => {
 
-      return (
+                                return (
 
-        <View
+                                    <View
 
-          key={index}
+                                        key={index}
 
-          style={{ width: "100%", height: "100%", position: "relative" }}
+                                        style={{ width: "100%", height: "100%", position: "relative" }}
 
-        >
+                                    >
 
-          {/* Post Image */}
+                                        {/* Post Image */}
 
-          <Image
+                                        <Image
 
-            style={{ width: "100%", height: "100%" }}
+                                            style={{ width: "100%", height: "100%" }}
 
-            source={{ uri: data.image }}
+                                            source={{ uri: data.image }}
 
-            resizeMode="contain"
+                                            resizeMode="contain"
 
-          />
+                                        />
 
- 
 
-          {/* ✅ Profile avatar + Display Name */}
 
-          <View
+                                        {/* ✅ Profile avatar + Display Name */}
 
-            style={{
+                                        <View
 
-              position: "absolute",
+                                            style={{
 
-              bottom: 15,
+                                                position: "absolute",
 
-              left: 20,
+                                                bottom: 15,
 
-              flexDirection: "row",
+                                                left: 20,
 
-              alignItems: "center",
+                                                flexDirection: "row",
 
-              backgroundColor: "rgba(0,0,0,0.4)", // translucent bg for contrast
+                                                alignItems: "center",
 
-              paddingHorizontal: 10,
+                                                backgroundColor: "rgba(0,0,0,0.4)", // translucent bg for contrast
 
-              paddingVertical: 6,
+                                                paddingHorizontal: 10,
 
-              borderRadius: 30,
+                                                paddingVertical: 6,
 
-            }}
+                                                borderRadius: 30,
 
-          >
+                                            }}
 
-            <Image
+                                        >
 
-              source={
+                                            <Image
 
-                profile.profileAvatar
+                                                source={
 
-                  ? { uri: profile.profileAvatar }
+                                                    profile.profileAvatar
 
-                  : IMAGES.profile
+                                                        ? { uri: profile.profileAvatar }
 
-              }
+                                                        : IMAGES.profile
 
-              style={{
+                                                }
 
-                width: 70,
+                                                style={{
 
-                height: 70,
+                                                    width: 70,
 
-                borderRadius: 50,
+                                                    height: 70,
 
-                borderWidth: 2,
+                                                    borderRadius: 50,
 
-                borderColor: "#fff",
+                                                    borderWidth: 2,
 
-                marginRight: 10,
+                                                    borderColor: "#fff",
 
-              }}
+                                                    marginRight: 10,
 
-            />
+                                                }}
 
-            <Text
+                                            />
 
-              style={{
+                                            <Text
 
-                fontSize: 16,
+                                                style={{
 
-                fontWeight: "bold",
+                                                    fontSize: 16,
 
-                color: "#fff", // always white text
+                                                    fontWeight: "bold",
 
-              }}
+                                                    color: "#fff", // always white text
 
-            >
+                                                }}
 
-              {profile.displayName}
+                                            >
 
-            </Text>
+                                                {profile.displayName}
 
-          </View>
+                                            </Text>
 
-        </View>
+                                        </View>
 
-      );
+                                    </View>
 
-    })}
+                                );
 
-  </Swiper>
+                            })}
 
-</View>
+                        </Swiper>
 
- 
+                    </View>
 
- 
+
+
+
 
             }
 
@@ -675,9 +682,9 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                         <TouchableOpacity
 
-                           onPress={() => commentSheetRef.current?.openSheet()} >
+                            onPress={() => commentSheetRef.current?.openSheet()} >
 
-                              {/* <TouchableOpacity onPress={() => commentSheetRef.current?.openSheet()}></TouchableOpacity> */}
+                            {/* <TouchableOpacity onPress={() => commentSheetRef.current?.openSheet()}></TouchableOpacity> */}
 
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
 
@@ -691,7 +698,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                                 {/* <BottomSheetComments ref={commentSheetRef} /> */}
 
- 
+
 
                                 {/* <Text style={[GlobalStyleSheet.postlike, { color: colors.title }]}>{comment}</Text> */}
 
@@ -711,13 +718,13 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                                         const fileUri = FileSystem.cacheDirectory + "sharedImage.jpg";
 
- 
+
 
                                         // Download image to local cache
 
                                         const { uri } = await FileSystem.downloadAsync(imageUrl, fileUri);
 
- 
+
 
                                         // Share only if available
 
@@ -769,7 +776,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                         </TouchableOpacity>
 
- 
+
 
                         <TouchableOpacity
 
@@ -783,13 +790,13 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                                         const fileUri = FileSystem.cacheDirectory + "downloadedImage.jpg";
 
- 
+
 
                                         // Download image to local cache
 
                                         const { uri } = await FileSystem.downloadAsync(imageUrl, fileUri);
 
- 
+
 
                                         // Request permission
 
@@ -839,47 +846,67 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                         </TouchableOpacity>
 
- 
-
- 
-
- 
 
                     </View>
 
                     <View>
 
-                        <TouchableOpacity
+       <TouchableOpacity
+  onPress={async () => {
+    try {
+      setshow(!show);
 
-                            onPress={() => {
+      const userToken = await AsyncStorage.getItem('userToken');
+      const accountType = await AsyncStorage.getItem('activeAccountType'); // "creator" or "personal"
 
-                                setshow(!show)
+      if (!userToken || !accountType) {
+        console.log("token received:", userToken, "accountType received:", accountType);
+        Alert.alert('Error', 'User not authenticated or account type missing');
+        return;
+      }
 
-                            }}
+      // pick endpoint based on role
+      const endpoint =
+        accountType === 'Personal'
+          ? 'http://192.168.1.4:5000/api/user/feed/save'
+          :'http://192.168.1.4:5000/api/creator/feed/save' ;
 
-                        >
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userToken}`,
+        },
+        body: JSON.stringify({ feedId: id }),
+      });
 
-                            <Image
+      const data = await res.json();
 
-                                style={{ width: 18, height: 18, resizeMode: 'contain', margin: 15, tintColor: show ? colors.title : colors.primary }}
+      if (res.ok) {
+        console.log(`${accountType} feed saved successfully:`, data.message);
+      } else {
+        console.log('Error saving feed:', data.message);
+        Alert.alert('Error', data.message || 'Failed to save feed');
+      }
+    } catch (error) {
+      console.error('Save feed error:', error);
+      Alert.alert('Error', 'Something went wrong while saving feed');
+    }
+  }}
+>
+  <Image
+    style={{
+      width: 18,
+      height: 18,
+      resizeMode: 'contain',
+      margin: 15,
+      tintColor: show ? colors.title : colors.primary,
+    }}
+    source={show ? IMAGES.save : IMAGES.save2}
+  />
+</TouchableOpacity>
 
-                                source={
 
-                                    show
-
-                                        ?
-
-                                        IMAGES.save
-
-                                        :
-
-                                        IMAGES.save2
-
-                                }
-
-                            />
-
-                        </TouchableOpacity>
 
                     </View>
 
@@ -913,11 +940,11 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                 </View> */}
 
-               
+
 
             </View>
 
-             {/* <CommentSheet ref={commentSheetRef} />  */}
+            {/* <CommentSheet ref={commentSheetRef} />  */}
 
         </View>
 
@@ -925,7 +952,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
 }
 
- 
+
 
 export default PostCard
 

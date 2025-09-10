@@ -279,6 +279,23 @@ const AddStory = ({ navigation }: AddStoryScreenProps) => {
     })();
   }, []);
 
+  const openCamera = async () => {
+  const result = await ImagePicker.launchCameraAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.All,
+    allowsEditing: false,
+    quality: 1,
+  });
+
+  if (!result.canceled) {
+    const uri = result.assets[0].uri;
+    const type = result.assets[0].type === 'video' ? 'video' : 'image';
+    setSelectedMedia(uri);
+    setSelectedType(type);
+    setGallery(prev => [{ uri, type }, ...prev]);
+  }
+};
+
+
   // Helper: is selection valid & matching?
   const isMatch = (() => {
     if (!selectedType || !selectedCategory) return false;
@@ -388,12 +405,20 @@ const AddStory = ({ navigation }: AddStoryScreenProps) => {
       </View>
 
       {/* Gallery Header */}
-      <View style={[GlobalStyleSheet.flexaling, { paddingHorizontal: 15, marginTop: 30 }]}>
-        <Text style={{ flex: 1, ...FONTS.fontMedium, ...FONTS.h5, color: colors.title }}>Gallery</Text>
-        <TouchableOpacity style={{ padding: 10 }} onPress={pickMedia}>
-          <Image style={{ height: 24, width: 24, tintColor: colors.title }} source={IMAGES.camera} />
-        </TouchableOpacity>
-      </View>
+     <View style={[GlobalStyleSheet.flexaling, { paddingHorizontal: 15, marginTop: 30 }]}>
+  <Text style={{ flex: 1, ...FONTS.fontMedium, ...FONTS.h5, color: colors.title }}>Gallery</Text>
+
+  {/* Camera button */}
+  <TouchableOpacity style={{ padding: 10 }} onPress={openCamera}>
+    <Image style={{ height: 24, width: 24, tintColor: colors.title }} source={IMAGES.camera} />
+  </TouchableOpacity>
+
+  {/* File button (opens gallery picker) */}
+  <TouchableOpacity style={{ padding: 10 }} onPress={pickMedia}>
+    <Image style={{ height: 24, width: 24, tintColor: colors.title }} source={IMAGES.profilepic} />
+  </TouchableOpacity>
+</View>
+
 
       {/* Gallery Grid */}
       <FlatList
@@ -453,10 +478,10 @@ const AddStory = ({ navigation }: AddStoryScreenProps) => {
       {/* (Optional) subtle hint bar for the Next availability */}
       {!canProceed && (
         <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-          <Text style={{ color: colors.title, opacity: 0.65, fontSize: 12 }}>
+          {/* <Text style={{ color: colors.title, opacity: 0.65, fontSize: 12 }}>
             Select a gallery item, then pick the matching top card ({' '}
             <Text style={{ fontWeight: '600' }}>Images</Text> for photos, <Text style={{ fontWeight: '600' }}>Reels</Text> for videos ).
-          </Text>
+          </Text> */}
         </View>
       )}
     </SafeAreaView>

@@ -40,18 +40,14 @@ const [loadingCategories, setLoadingCategories] = useState(true);
   const [language, setLanguage] = useState('');
  
   // Fetch categories from backend
-  useEffect(() => {
+useEffect(() => {
   const fetchCategories = async () => {
     try {
       const res = await axios.get('http://192.168.1.4:5000/api/creator/get/feed/category');
-        console.log("ddd",res.data.categories)
-      if (Array.isArray(res.data.categories)) {
-        // map to the type you need
-        const formatted = res.data.categories.map((cat: any) => ({
-          categoryId: cat._id,
-          categoriesName: cat.name,
-        }));
-        setCategories(formatted);
+      console.log("ddd", res.data);
+
+      if (Array.isArray(res.data)) {
+        setCategories(res.data); // already in correct shape
       } else {
         setCategories([]);
       }
@@ -64,7 +60,7 @@ const [loadingCategories, setLoadingCategories] = useState(true);
   };
   fetchCategories();
 }, []);
- 
+
  
   const handlePost = async () => {
     if (!mediaUrl) {
@@ -90,23 +86,30 @@ const [loadingCategories, setLoadingCategories] = useState(true);
         type: mediaType === 'video' ? 'video/mp4' : 'image/jpeg',
       } as any);
  
-      // Fields
-      formData.append('language', language);
-      formData.append('categoryId', categoryId); // sending ID instead of name
-      formData.append('type', mediaType);
- 
-      const token = await AsyncStorage.getItem('userToken');
-      const res = await axios.post(
-        'http://192.168.1.4:5000/api/creator/feed/upload',
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
- 
+     // Fields
+formData.append('language', language);
+formData.append('category', categoryId); // sending ID instead of name
+formData.append('type', mediaType);
+
+// 🔹 Debug: log as JSON
+const formDataJSON: any = {};
+formData._parts.forEach(([key, value]) => {
+  formDataJSON[key] = value;
+});
+console.log('FormData JSON:', JSON.stringify(formDataJSON, null, 2));
+
+const token = await AsyncStorage.getItem('userToken');
+const res = await axios.post(
+  'http://192.168.1.4:5000/api/creator/feed/upload',
+  formData,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'multipart/form-data',
+    },
+  }
+);
+
       if (res.status === 201) {
         Alert.alert('Success', 'Post uploaded successfully');
         navigation.navigate('DrawerNavigation', { screen: 'Home' });

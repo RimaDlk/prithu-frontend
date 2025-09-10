@@ -182,7 +182,7 @@ const PostList = forwardRef((props: any, ref: any) => {
             profileimage={post.creatorAvatar || null}
             date={post.timeAgo}
             postimage={[{ image: post.contentUrl }]}
-            like={post.likes?.length || 0}
+            like={post.likesCount}
             comment={post.comments?.length || 0}
             posttitle={post.caption}
             posttag={post.tags?.join(' ')}

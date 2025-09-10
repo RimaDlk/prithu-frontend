@@ -24,21 +24,20 @@ const Categories: React.FC = () => {
     const fetchCategories = async () => {
       try {
         const res = await fetch(
-          "http://192.168.1.4:5000/api/all/catagories"
+          "http://192.168.1.4:5000/api/get/content/catagories"
         );
 
         const data = await res.json();
         console.log("Categories API Response:", data);
 
-        if (Array.isArray(data.categories)) {
-          const safeCategories = data.categories.map(
-            (cat: any, index: number) => ({
-              _id: cat._id || index, // fallback if _id missing
-              name: cat.name || "Unnamed", // fallback if name missing
-            })
-          );
-          setCategories(safeCategories);
-        }
+       if (Array.isArray(data.categories)) {
+  const safeCategories = data.categories.map((cat: any, index: number) => ({
+    _id: cat._id || cat.categoryId || index, // fallback if missing
+    name: cat.name || cat.categoriesName || "Unnamed", // pick whichever exists
+  }));
+
+  setCategories(safeCategories);
+}
       } catch (err) {
         console.error("Error fetching categories:", err);
       } finally {

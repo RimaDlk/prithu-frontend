@@ -39,8 +39,13 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
 
     const navigation = useNavigation<any>();
+
+    // ✅ Account type state
     const [activeAccountType, setActiveAccountType] = useState<string | null>(null);
 
+    // ✅ Like state
+    const [isLiked, setIsLiked] = useState(false);
+    const [likeCount, setLikeCount] = useState(like || 0);
 
 
     const [profile, setProfile] = useState<any>({
@@ -57,20 +62,21 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
     });
 
-       // 🔹 Fetch active account type once
-          useEffect(() => {
-              const fetchAccountType = async () => {
-                  try {
-                      const storedType = await AsyncStorage.getItem("activeAccountType");
-                      console.log(storedType)
-                      if (storedType) setActiveAccountType(storedType);
-                  } catch (err) {
-                      console.log("Error fetching account type:", err);
-                  }
-              };
-              fetchAccountType();
-          }, []);
+    // 🔹 Fetch active account type once
+    useEffect(() => {
+        const fetchAccountType = async () => {
+            try {
+                const storedType = await AsyncStorage.getItem("activeAccountType");
+                console.log(storedType)
+                if (storedType) setActiveAccountType(storedType);
+            } catch (err) {
+                console.log("Error fetching account type:", err);
+            }
+        };
+        fetchAccountType();
+    }, []);
 
+    // 🔹 Fetch profile
     const fetchProfile = async () => {
 
         try {
@@ -142,8 +148,6 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
     };
 
-
-
     useEffect(() => {
 
         fetchProfile();
@@ -164,21 +168,68 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
     const [show, setshow] = React.useState(true);
 
-
-
     const [mute, setmute] = React.useState(false);
 
 
 
     const video = React.useRef(null);
 
-
-
     const commentSheetRef = useRef(null);
 
 
 
-    return (
+  const handleLike = async () => {
+ console.log("➡️ handleLike triggered"); // ✅ check if button works
+
+  try {
+    const userToken = await AsyncStorage.getItem('userToken');
+    const accountType = await AsyncStorage.getItem('activeAccountType');
+
+
+    console.log("📌 userToken:", userToken);
+    console.log("📌 accountType:", accountType);
+    console.log("📌 feedId:", id);
+
+    if (!userToken || !accountType) {
+      Alert.alert('Error', 'User not authenticated or account type missing');
+      return;
+    }
+
+    // Optimistic UI update
+    setIsLiked(!isLiked);
+    setLikeCount(prev => (isLiked ? prev - 1 : prev + 1));
+
+    const endpoint =
+      accountType === 'Personal'
+        ? 'http://192.168.1.4:5000/api/user/feed/like'
+        : 'http://192.168.1.4:5000/api/creator/feed/like';
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${userToken}`, //  token attached
+      },
+      body: JSON.stringify({ feedId: id }), //  only feedId,
+    });
+
+    const data = await res.json();
+    console.log("📌 Like API response:", data);
+
+    if (res.ok) {
+      console.log(`${accountType} feed like updated:`, data.message);
+    } else {
+      console.log('❌ Error liking feed:', data.message);
+      Alert.alert('Error', data.message || 'Failed to like feed');
+    }
+  } catch (error) {
+    console.error('❌ Like feed error:', error);
+    Alert.alert('Error', 'Something went wrong while liking feed');
+  }
+};
+
+
+  return (
 
         <View style={{ borderBottomWidth: 1, borderBottomColor: colors.border, marginHorizontal: -15 }}>
 
@@ -654,31 +705,21 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                     <View style={[GlobalStyleSheet.flexaling, { gap: 22 }]}>
 
-                        <View style={GlobalStyleSheet.flexaling}>
+           {/* ✅ Like Button */}
+<View style={GlobalStyleSheet.flexaling}>
+  <LikeBtn
+    onPress={handleLike} // pass it directly
+    color={isLiked ? colors.primary : colors.title}
+    sizes={'sm'}
+  />
+  <TouchableOpacity >
+    <Text style={[GlobalStyleSheet.postlike, { color: colors.title }]}>
+      {likeCount}
+    </Text>
+  </TouchableOpacity>
+</View>
 
-                            <TouchableOpacity>
 
-                                <LikeBtn
-
-                                    color={colors.title}
-
-                                    sizes={'sm'}
-
-                                />
-
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-
-                                onPress={() => navigation.navigate('like')}
-
-                            >
-
-                                {/* <Text style={[GlobalStyleSheet.postlike, { color: colors.title }]}>{like}</Text> */}
-
-                            </TouchableOpacity>
-
-                        </View>
 
                         <TouchableOpacity
 
@@ -851,60 +892,60 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                     <View>
 
-       <TouchableOpacity
-  onPress={async () => {
-    try {
-      setshow(!show);
+                        <TouchableOpacity
+                            onPress={async () => {
+                                try {
+                                    setshow(!show);
 
-      const userToken = await AsyncStorage.getItem('userToken');
-      const accountType = await AsyncStorage.getItem('activeAccountType'); // "creator" or "personal"
+                                    const userToken = await AsyncStorage.getItem('userToken');
+                                    const accountType = await AsyncStorage.getItem('activeAccountType'); // "creator" or "personal"
 
-      if (!userToken || !accountType) {
-        console.log("token received:", userToken, "accountType received:", accountType);
-        Alert.alert('Error', 'User not authenticated or account type missing');
-        return;
-      }
+                                    if (!userToken || !accountType) {
+                                        console.log("token received:", userToken, "accountType received:", accountType);
+                                        Alert.alert('Error', 'User not authenticated or account type missing');
+                                        return;
+                                    }
 
-      // pick endpoint based on role
-      const endpoint =
-        accountType === 'Personal'
-          ? 'http://192.168.1.4:5000/api/user/feed/save'
-          :'http://192.168.1.4:5000/api/creator/feed/save' ;
+                                    // pick endpoint based on role
+                                    const endpoint =
+                                        accountType === 'Personal'
+                                            ? 'http://192.168.1.4:5000/api/user/feed/save'
+                                            : 'http://192.168.1.4:5000/api/creator/feed/save';
 
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${userToken}`,
-        },
-        body: JSON.stringify({ feedId: id }),
-      });
+                                    const res = await fetch(endpoint, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            Authorization: `Bearer ${userToken}`,
+                                        },
+                                        body: JSON.stringify({ feedId: id }),
+                                    });
 
-      const data = await res.json();
+                                    const data = await res.json();
 
-      if (res.ok) {
-        console.log(`${accountType} feed saved successfully:`, data.message);
-      } else {
-        console.log('Error saving feed:', data.message);
-        Alert.alert('Error', data.message || 'Failed to save feed');
-      }
-    } catch (error) {
-      console.error('Save feed error:', error);
-      Alert.alert('Error', 'Something went wrong while saving feed');
-    }
-  }}
->
-  <Image
-    style={{
-      width: 18,
-      height: 18,
-      resizeMode: 'contain',
-      margin: 15,
-      tintColor: show ? colors.title : colors.primary,
-    }}
-    source={show ? IMAGES.save : IMAGES.save2}
-  />
-</TouchableOpacity>
+                                    if (res.ok) {
+                                        console.log(`${accountType} feed saved successfully:`, data.message);
+                                    } else {
+                                        console.log('Error saving feed:', data.message);
+                                        Alert.alert('Error', data.message || 'Failed to save feed');
+                                    }
+                                } catch (error) {
+                                    console.error('Save feed error:', error);
+                                    Alert.alert('Error', 'Something went wrong while saving feed');
+                                }
+                            }}
+                        >
+                            <Image
+                                style={{
+                                    width: 18,
+                                    height: 18,
+                                    resizeMode: 'contain',
+                                    margin: 15,
+                                    tintColor: show ? colors.title : colors.primary,
+                                }}
+                                source={show ? IMAGES.save : IMAGES.save2}
+                            />
+                        </TouchableOpacity>
 
 
 

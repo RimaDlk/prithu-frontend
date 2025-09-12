@@ -34,7 +34,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
-const PostCard = ({ id, name, profileimage, date, postimage, like, comment, posttitle, posttag, sheetRef, optionSheet, hasStory, reelsvideo, caption, background, visibleBoxes,setSelectedPostId }: any) => {
+const PostCard = ({ id, name, profileimage, date, postimage, like, comment, posttitle, posttag, sheetRef, optionSheet, hasStory, reelsvideo, caption, background, visibleBoxes,setSelectedPostId, }: any) => {
 
 
 
@@ -95,7 +95,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
 
 
-            const res = await fetch('https://deploy-backend-z7sw.onrender.com/api/get/profile/detail', {
+            const res = await fetch('http://192.168.1.14:5000/api/get/profile/detail', {
 
                 method: 'GET',
 
@@ -136,7 +136,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                 console.log('Error fetching profile:', data.message);
 
-                Alert.alert('Error', data.message || 'Failed to fetch profile');
+                // Alert.alert('Error', data.message || 'Failed to fetch profile');
 
             }
 
@@ -144,7 +144,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
             console.error('Fetch profile error:', err);
 
-            Alert.alert('Error', 'Failed to fetch profile');
+            // Alert.alert('Error', 'Failed to fetch profile');
 
         }
 
@@ -185,7 +185,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
     const userToken = await AsyncStorage.getItem('userToken');
     const accountType = await AsyncStorage.getItem('activeAccountType');
 
-    if (!userToken || !accountType) {
+    if (!userToken) {
       Alert.alert('Error', 'User not authenticated or account type missing');
       return;
     }
@@ -197,8 +197,8 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
     const endpoint =
       accountType === 'Personal'
-        ? 'https://deploy-backend-z7sw.onrender.com/api/user/feed/like'
-        : 'https://deploy-backend-z7sw.onrender.com/api/creator/feed/like';
+        ? 'http://192.168.1.14:5000/api/user/feed/like'
+        : 'http://192.168.1.14:5000/api/creator/feed/like';
 
     const res = await fetch(endpoint, {
       method: 'POST',
@@ -372,13 +372,18 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
                         />
 
                     </TouchableOpacity> */}
+
+         {/* it is a column button    */}
+
+
+
                 <View style={{ flexDirection: 'row' }}>
 
 <TouchableOpacity
-  onPress={() => {
-    setSelectedPostId?.(id); // sheet will open automatically in useEffect
-    console.log("worked")
-  }}
+//   onPress={() => {
+//     setSelectedPostId?.(id); // sheet will open automatically in useEffect
+//     console.log("worked")
+//   }}
 >
   <Image
     style={{ width: 18, height: 18, margin: 10, tintColor: colors.title }}
@@ -388,6 +393,10 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
 
                 </View>
+
+
+
+                {/* to this column button */}
 
             </View>
 
@@ -720,7 +729,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                         <TouchableOpacity
 
-                            onPress={() => commentSheetRef.current?.openSheet()} >
+                            onPress={() => commentSheetRef.current?.openSheet(id)} >
 
                             {/* <TouchableOpacity onPress={() => commentSheetRef.current?.openSheet()}></TouchableOpacity> */}
 
@@ -815,7 +824,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
                         </TouchableOpacity>
 
 
-
+{/* 
                         <TouchableOpacity
 
                             onPress={async () => {
@@ -882,7 +891,31 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
 
                             </View>
 
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
+
+                        <TouchableOpacity
+  onPress={() => {
+    // 👇 Navigate to another page instead of downloading
+    navigation.navigate("Subcribe", {
+      postId: id,
+      images: postimage,
+      owner: name,
+    });
+  }}
+>
+  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+    <Image
+      style={{
+        width: 28,
+        height: 28,
+        resizeMode: 'contain',
+        tintColor: colors.title,
+      }}
+      source={IMAGES.download}
+    />
+  </View>
+</TouchableOpacity>
+
 
 
                     </View>
@@ -897,7 +930,7 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
                                     const userToken = await AsyncStorage.getItem('userToken');
                                     const accountType = await AsyncStorage.getItem('activeAccountType'); // "creator" or "personal"
 
-                                    if (!userToken || !accountType) {
+                                    if (!userToken) {
                                         console.log("token received:", userToken, "accountType received:", accountType);
                                         Alert.alert('Error', 'User not authenticated or account type missing');
                                         return;
@@ -906,8 +939,8 @@ const PostCard = ({ id, name, profileimage, date, postimage, like, comment, post
                                     // pick endpoint based on role
                                     const endpoint =
                                         accountType === 'Personal'
-                                            ? 'https://deploy-backend-z7sw.onrender.com/api/user/feed/save'
-                                            : 'https://deploy-backend-z7sw.onrender.com/api/creator/feed/save';
+                                            ? 'http://192.168.1.14:5000/api/user/feed/save'
+                                            : 'http://192.168.1.14:5000/api/creator/feed/save';
 
                                     const res = await fetch(endpoint, {
                                         method: 'POST',

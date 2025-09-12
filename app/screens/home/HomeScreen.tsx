@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
+
 import {
   View,
   SafeAreaView,
@@ -17,8 +18,10 @@ import Categories from './Categories';
 import PostShareSheet from '../../components/bottomsheet/PostShareSheet';
 import PostoptionSheet from '../../components/bottomsheet/PostoptionSheet';
 import { useFocusEffect } from '@react-navigation/native';
+import CommentSheet from '../comment/CommentSheet';
 
 const { height: windowHeight } = Dimensions.get('window');
+
 
 interface HomeScreenProps {
   postListRef: React.RefObject<any>; // ✅ receive the ref from BottomNavigation
@@ -32,6 +35,7 @@ const HomeScreen = ({ postListRef }: HomeScreenProps) => {
   const moresheet = useRef<any>();
   const scrollRef = useRef<ScrollView>(null);
     const optionSheetRef = useRef(null);
+    const commentSheetRef = useRef<any>();
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -122,11 +126,12 @@ const HomeScreen = ({ postListRef }: HomeScreenProps) => {
         }
       >
         <View style={{ height: windowHeight * 0.2 }} />
-        <PostList sheetRef={sheetRef} optionSheet={optionSheetRef} />
+        <PostList sheetRef={sheetRef} optionSheet={optionSheetRef} commentSheet={commentSheetRef} />
       </ScrollView>
 
       <PostShareSheet ref={sheetRef} />
       <PostoptionSheet ref={moresheet} />
+      <CommentSheet ref={commentSheetRef} />
     </SafeAreaView>
   );
 };

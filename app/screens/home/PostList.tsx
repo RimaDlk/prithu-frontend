@@ -49,7 +49,7 @@ const PostList = forwardRef((props: any, ref: any) => {
 
     // 2. Tell backend
     await axios.post(
-      "https://deploy-backend-z7sw.onrender.com/api/user/not/intrested", // your backend route
+      "http://192.168.1.14:5000/api/user/not/intrested", // your backend route
       { feedId: postId },
       {
         headers: {
@@ -84,7 +84,7 @@ useEffect(() => {
       return;
     }
 
-  const res = await axios.get('https://deploy-backend-z7sw.onrender.com/api/get/all/feeds/user', {
+  const res = await axios.get('http://192.168.1.14:5000/api/get/all/feeds/user', {
   headers: {
     Authorization: `Bearer ${token}`,
   },

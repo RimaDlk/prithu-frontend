@@ -3,7 +3,6 @@ import { Image, Platform, TouchableOpacity, View, Animated, Text, Dimensions } f
 import { COLORS, SIZES, FONTS, IMAGES } from '../constants/theme';
 import { useTheme } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import {
     widthPercentageToDP as wp,
     heightPercentageToDP as hp,
@@ -25,24 +24,48 @@ const BottomTab = ({ state, descriptors, navigation, postListRef }: Props) => {
 
     const [tabWidth, setWidth] = useState(wp('100%'));
     const [profilePic, setProfilePic] = useState<string | null>(null);  //new here 
+    const [activeAccountType, setActiveAccountType] = useState<string | null>(null);
 
     const lastTap = useRef<number>(0);
 
-  
-  const handleHomePress = () => {
-    const now = Date.now();
-    const DOUBLE_PRESS_DELAY = 300;
 
-    if (lastTap.current && now - lastTap.current < DOUBLE_PRESS_DELAY) {
-      postListRef.current?.scrollToTop(); //  works now
-    } else {
-      navigation.navigate('Home');
-    }
+    // ✅ Fetch active account type
+    useEffect(() => {
+        const fetchAccountType = async () => {
+            try {
+                const storedType = await AsyncStorage.getItem('activeAccountType');
+                if (storedType) {
+                    setActiveAccountType(storedType);
+                }
+            } catch (error) {
+                console.log('Error fetching account type:', error);
+            }
+        };
+        fetchAccountType();
+    }, []);
 
-    lastTap.current = now;
-  };
-    const tabWD =
-        tabWidth < SIZES.container ? tabWidth / 5 : SIZES.container / 5;
+    const handleHomePress = () => {
+        const now = Date.now();
+        const DOUBLE_PRESS_DELAY = 300;
+
+        if (lastTap.current && now - lastTap.current < DOUBLE_PRESS_DELAY) {
+            postListRef.current?.scrollToTop(); //  works now
+        } else {
+            navigation.navigate('Home');
+        }
+
+        lastTap.current = now;
+    };
+
+    // Filter tabs first based on account type
+ const filteredRoutes = state.routes.filter(
+  (route: any) => !(route.name === 'Reels' && activeAccountType !== 'Creator')
+);
+    
+  // tab width should be divided by number of visible routes
+const tabWD =
+  tabWidth < SIZES.container ? tabWidth / filteredRoutes.length : SIZES.container / filteredRoutes.length;
+
 
     const circlePosition = useRef(
         new Animated.Value(0),
@@ -61,7 +84,7 @@ const BottomTab = ({ state, descriptors, navigation, postListRef }: Props) => {
                 return;
             }
 
-            const res = await fetch("https://deploy-backend-z7sw.onrender.com/api/get/profile/detail", {
+            const res = await fetch("http://192.168.1.14:5000/api/get/profile/detail", {
                 method: "GET",
                 headers: {
                     "Authorization": `Bearer ${userToken}`, // pass token here
@@ -97,12 +120,13 @@ const BottomTab = ({ state, descriptors, navigation, postListRef }: Props) => {
     }, []);
 
 
-    useEffect(() => {
-        Animated.spring(circlePosition, {
-            toValue: state.index * tabWD,
-            useNativeDriver: true,
-        }).start();
-    }, [state.index, tabWidth])
+// Animate based on filtered index
+useEffect(() => {
+  Animated.spring(circlePosition, {
+    toValue: state.index * tabWD,
+    useNativeDriver: true,
+  }).start();
+}, [state.index, tabWidth, activeAccountType]);
 
 
     const onTabPress = (index: number) => {
@@ -169,91 +193,99 @@ const BottomTab = ({ state, descriptors, navigation, postListRef }: Props) => {
                             }}
                         />
                     </Animated.View>
-                    {state.routes.map((route: any, index: any) => {
-                        const { options } = descriptors[route.key];
-                        const label =
-                            options.tabBarLabel !== undefined
-                                ? options.tabBarLabel
-                                : options.title !== undefined
-                                    ? options.title
-                                    : route.name;
+{filteredRoutes.map((route: any, index: any) => {
+  const { options } = descriptors[route.key];
+  const label =
+    options.tabBarLabel !== undefined
+      ? options.tabBarLabel
+      : options.title !== undefined
+      ? options.title
+      : route.name;
 
-                        const isFocused = state.index === index;
+  // ✅ find correct focus state by comparing keys
+  const isFocused = state.routes[state.index].key === route.key;
 
-                        const onPress = () => {
-                            const event = navigation.emit({
-                                type: 'tabPress',
-                                target: route.key,
-                                canPreventDefault: true,
-                            });
+        const onPress = () => {
+            const event = navigation.emit({
+                type: 'tabPress',
+                target: route.key,
+                canPreventDefault: true,
+            });
 
-                            // Special double-tap for Home
-                            if (label === 'Home') {
-                                handleHomePress();
-                                return;
-                            }
+            if (label === 'Home') {
+                handleHomePress();
+                return;
+            }
 
-                            // 👇 Special case for createpost 
-                            if (label === 'Reels') {
-                                navigation.navigate('createpost'); // <-- Your create post screen name
-                                return;
-                            }
-                            // 👇 Special case for Plus (Reels in your current mapping)
-                            if (label === 'Chat') {
-                                navigation.navigate('Reels'); // <-- Your create post screen name
-                                return;
-                            }
+            if (label === 'Reels') {
+                navigation.navigate('createpost');
+                return;
+            }
 
-                            if (!isFocused && !event.defaultPrevented) {
-                                navigation.navigate({ name: route.name, merge: true });
-                                onTabPress(index);
-                            }
-                        };
+            if (label === 'Chat') {
+                navigation.navigate('Reels');
+                return;
+            }
 
+            if (!isFocused && !event.defaultPrevented) {
+                navigation.navigate({ name: route.name, merge: true });
+                onTabPress(index);
+            }
+        };
 
+        return (
+            <TouchableOpacity
+                key={index}
+                activeOpacity={.8}
+                onPress={onPress}
+                style={{
+                    flex: 1,
+                    alignItems: 'center',
+                    height: '100%',
+                    justifyContent: 'center',
+                    marginTop: 5,
+                }}
+            >
+                {label === 'Profile' ? (
+                    <Image
+                        style={{
+                            width: 34,
+                            height: 34,
+                            borderRadius: 50,
+                            borderWidth: isFocused ? 2 : 0,
+                            borderColor: isFocused ? COLORS.primary : 'transparent',
+                        }}
+                        source={
+                            profilePic
+                                ? { uri: profilePic }
+                                : IMAGES.profile
+                        }
+                    />
+                ) : (
+                    <Image
+                        style={{
+                            width: 20,
+                            height: 20,
+                            opacity: isFocused ? 1 : .4,
+                            tintColor: isFocused ? COLORS.primary : colors.text,
+                        }}
+                        source={
+                            label == 'Home'
+                                ? IMAGES.home
+                                : label == 'Search'
+                                ? IMAGES.search
+                                : label == 'Reels'
+                                ? IMAGES.plus
+                                : label == 'Chat'
+                                ? IMAGES.reels
+                                : null
+                        }
+                    />
+                )}
+            </TouchableOpacity>
+        );
+    })}
 
-                        return (
-                            <TouchableOpacity
-                                key={index}
-                                activeOpacity={.8}
-                                onPress={onPress}
-                                style={{ flex: 1, alignItems: 'center', height: '100%', justifyContent: 'center', marginTop: 5 }}
-                            >
-                                {label === 'Profile' ? (
-                                    <Image
-                                        style={{
-                                            width: 34,
-                                            height: 34,
-                                            borderRadius: 50,
-                                            borderWidth: isFocused ? 2 : 0,
-                                            borderColor: isFocused ? COLORS.primary : 'transparent',
-                                        }}
-                                        source={
-                                            profilePic
-                                                ? { uri: profilePic }
-                                                : IMAGES.profile // fallback image
-                                        }
-                                    />
-                                ) : (
-                                    <Image
-                                        style={{
-                                            width: 20,
-                                            height: 20,
-                                            opacity: isFocused ? 1 : .4,
-                                            tintColor: isFocused ? COLORS.primary : colors.text
-                                        }}
-                                        source={
-                                            label == 'Home' ? IMAGES.home :
-                                                label == 'Search' ? IMAGES.search :
-                                                    label == 'Reels' ? IMAGES.plus :
-                                                        label == 'Chat' ? IMAGES.reels :
-                                                            IMAGES.eyeclose
-                                        }
-                                    />
-                                )}
-                            </TouchableOpacity>
-                        );
-                    })}
                 </View>
             </View>
         </View>

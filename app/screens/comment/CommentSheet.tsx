@@ -365,13 +365,14 @@
 // export default forwardRef(CommentSheet);
 
 
-
 import React, {
   forwardRef,
   useCallback,
   useImperativeHandle,
   useMemo,
   useRef,
+  useState,
+  useEffect,
 } from 'react';
 import {
   View,
@@ -380,22 +381,60 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
 import { useTheme } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import { GlobalStyleSheet } from '../../constants/styleSheet';
 import { FONTS, IMAGES } from '../../constants/theme';
 
 const CommentSheet = (props: any, ref: any) => {
+  
   const bottomSheetRef = useRef<any>(null);
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [feedId, setFeedId] = useState<string | null>(null);  // ✅ store here
+   console.log(feedId)
+   console.log(comments)
 
   const snapPoints = useMemo(() => ['90%'], []);
 
+  const theme = useTheme();
+  const { colors } = theme;
+// Fetch comments from backend
+const fetchComments = async () => {
+  try {
+    setLoading(true);
+    const token = await AsyncStorage.getItem('userToken'); // get token
+
+    const response = await axios.post(
+      `http://192.168.1.14:5000/api/get/comments/for/feed`,
+      { feedId }, // ✅ send feedId in body
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+      
+    );
+
+    setComments(response.data.comments || []);
+    setLoading(false);
+  } catch (error) {
+    console.error('Error fetching comments:', error.response?.data || error.message);
+    setLoading(false);
+  }
+};
+
+ 
   const handleSheetChanges = useCallback((index: any) => {
-    console.log('Comment sheet changed to index:', index);
+    if (index === 0) fetchComments();
   }, []);
 
   const renderBackdrop = useCallback(
@@ -405,33 +444,70 @@ const CommentSheet = (props: any, ref: any) => {
     []
   );
 
+  // expose openSheet and accept feedId
   useImperativeHandle(ref, () => ({
-    openSheet: () => {
-      openSheet();
+    openSheet: (id: string) => {
+      setFeedId(id);                           // ✅ assign feedId
+      bottomSheetRef.current?.snapToIndex(0);  // open sheet
+      fetchComments(id);                       // fetch comments for this feed
     },
   }));
 
-  const openSheet = () => {
-    bottomSheetRef.current?.snapToIndex(0);
-  };
+  // Post comment to backend
+ const postComment = async () => {
+  if (!commentText.trim()) return;
 
-  const theme = useTheme();
-  const { colors } = theme;
+  try {
+    const token = await AsyncStorage.getItem('userToken'); // make sure token key matches
+    if (!token) {
+      console.error('No token found');
+      return;
+    }
 
-  // Dummy comment data
-  const comments = [
-    { id: '1', user: 'John Doe', text: 'Great post!' },
-    { id: '2', user: 'Jane Smith', text: 'Thanks for sharing.' },
-  ];
+    const response = await axios.post(
+      'http://192.168.1.14:5000/api/user/feed/comment',
+      { feedId, commentText, },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-  const renderItem = ({ item }: any) => (
-    <View style={{ paddingVertical: 8 }}>
-      <Text style={[GlobalStyleSheet.text, { fontWeight: 'bold', color: colors.text }]}>
-        {item.user}
+    // Add new comment to list
+    setComments([response.data.comment, ...comments]);
+    setCommentText('');
+  } catch (error) {
+    // console.log("error posting comment")
+    console.error('Error posting comment:', error.response?.data );
+  }
+};
+
+const renderItem = ({ item }: any) => (
+  <View style={{ flexDirection: 'row', paddingVertical: 10, alignItems: 'flex-start' }}>
+    <Image
+      source={item.avatar ? { uri: item.avatar } : IMAGES.userPlaceholder}
+      style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }}
+    />
+    <View style={{ flex: 1 }}>
+      {/* Username + Time inline */}
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <Text
+          style={[
+            GlobalStyleSheet.text,
+            { fontWeight: 'bold', color: colors.text, marginRight: 6 },
+          ]}
+        >
+          {item.username || 'Unknown User'}
+        </Text>
+        <Text style={{ color: colors.text + '99', fontSize: 12 }}>
+          {item.timeAgo}
+        </Text>
+      </View>
+
+      {/* Comment text */}
+      <Text style={[GlobalStyleSheet.text, { color: colors.text, marginTop: 2 }]}>
+        {item.commentText}
       </Text>
-      <Text style={[GlobalStyleSheet.text, { color: colors.text }]}>{item.text}</Text>
     </View>
-  );
+  </View>
+);
 
   return (
     <BottomSheet
@@ -441,44 +517,75 @@ const CommentSheet = (props: any, ref: any) => {
       snapPoints={snapPoints}
       onChange={handleSheetChanges}
       backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: colors.card }}
+        backgroundStyle={{
+        backgroundColor: colors.card,
+        borderTopLeftRadius: 50,   //  add curve
+        borderTopRightRadius: 50,  //  add curve
+  }}
       handleIndicatorStyle={{ backgroundColor: colors.border }}
     >
-      <BottomSheetView style={[GlobalStyleSheet.container, { flex: 1 }]}>
-        <FlatList
-          data={comments}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={{ paddingBottom: 80 }}
-        />
-        <View
-          style={{
-            flexDirection: 'row',
-            paddingHorizontal: 16,
-            paddingVertical: 8,
-            borderTopWidth: 1,
-            borderColor: colors.border,
-            alignItems: 'center',
-            backgroundColor: colors.card,
-          }}
-        >
-          <TextInput
-            placeholder="Add a comment..."
-            placeholderTextColor={colors.text}
-            style={{
-              flex: 1,
-              paddingVertical: 8,
-              paddingHorizontal: 12,
-              backgroundColor: colors.background,
-              borderRadius: 20,
-              color: colors.text,
-            }}
-          />
-          <TouchableOpacity style={{ marginLeft: 10 }}>
-            <Text style={{ color: colors.primary, fontWeight: 'bold' }}>Post</Text>
-          </TouchableOpacity>
-        </View>
-      </BottomSheetView>
+<BottomSheetView style={{ flex: 1 }}>
+  {loading ? (
+    <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
+  ) : (
+    <FlatList
+      data={comments}
+      keyExtractor={(item) => item._id}
+      renderItem={renderItem}
+      contentContainerStyle={{
+        paddingBottom: 70, // leave space for input bar
+        paddingHorizontal: 16,
+      }}
+      keyboardShouldPersistTaps="handled"
+    />
+  )}
+
+  {/* ✅ Input bar fixed at bottom */}
+  <KeyboardAvoidingView
+    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    keyboardVerticalOffset={0} // prevents bottom tab from moving up
+  >
+    <View
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderTopWidth: 1,
+        borderColor: colors.border,
+        alignItems: 'center',
+        backgroundColor: colors.card,
+      }}
+    >
+      <TextInput
+        placeholder="Add a comment..."
+        placeholderTextColor={colors.text + '80'}
+        value={commentText}
+        onChangeText={setCommentText}
+        style={{
+          flex: 1,
+          paddingVertical: 8,
+          paddingHorizontal: 12,
+          backgroundColor: colors.background,
+          borderRadius: 25,
+          color: colors.text,
+          fontSize: 14,
+        }}
+      />
+      <TouchableOpacity style={{ marginLeft: 10 }} onPress={postComment}>
+        <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 14 }}>Post</Text>
+      </TouchableOpacity>
+    </View>
+  </KeyboardAvoidingView>
+</BottomSheetView>
+
+
+
+
+      
     </BottomSheet>
   );
 };

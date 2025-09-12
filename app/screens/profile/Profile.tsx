@@ -130,20 +130,20 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
   const [error, setError] = useState<string | null>(null);
   const [activeAccountType, setActiveAccountType] = useState<string | null>(null);
 
-  
-      // 🔹 Fetch active account type once
-      useEffect(() => {
-          const fetchAccountType = async () => {
-              try {
-                  const storedType = await AsyncStorage.getItem("activeAccountType");
-                  console.log(storedType)
-                  if (storedType) setActiveAccountType(storedType);
-              } catch (err) {
-                  console.log("Error fetching account type:", err);
-              }
-          };
-          fetchAccountType();
-      }, []);
+
+  // 🔹 Fetch active account type once
+  useEffect(() => {
+    const fetchAccountType = async () => {
+      try {
+        const storedType = await AsyncStorage.getItem("activeAccountType");
+        console.log(storedType)
+        if (storedType) setActiveAccountType(storedType);
+      } catch (err) {
+        console.log("Error fetching account type:", err);
+      }
+    };
+    fetchAccountType();
+  }, []);
 
   const fetchProfile = async () => {
     try {
@@ -153,19 +153,19 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
         return;
       }
 
-      const res = await fetch('https://deploy-backend-z7sw.onrender.com/api/get/profile/detail', {
+      const res = await fetch('http://192.168.1.14:5000/api/get/profile/detail', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${userToken}`,
         },
       });
       const data = await res.json();
-      
+
       if (res.ok && data.profile) {
         const profileData = data.profile;
         const fixedAvatar = profileData.profileAvatar
         console.log(fixedAvatar)
-         
+
 
         setProfile({
           displayName: profileData.displayName || '',
@@ -176,11 +176,11 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
         });
       } else {
         console.log('Error fetching profile:', data.message);
-        Alert.alert('Error', data.message || 'Failed to fetch profile');
+        // Alert.alert('Error', data.message || 'Failed to fetch profile');
       }
     } catch (err) {
       console.error('Fetch profile error:', err);
-      Alert.alert('Error', 'Failed to fetch profile');
+      // Alert.alert('Error', 'Failed to fetch profile');
     }
   };
 
@@ -200,7 +200,7 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
           return;
         }
 
-        const response = await fetch('https://deploy-backend-z7sw.onrender.com/api/creator/getall/feeds', {
+        const response = await fetch('http://192.168.1.14:5000/api/creator/getall/feeds', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -209,7 +209,7 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
         const data = await response.json();
         const feeds = data.feeds || [];
 
-        console.log("data",feeds)
+        console.log("data", feeds)
 
 
         // Image posts
@@ -217,7 +217,7 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
           .filter((feed: any) => feed.type === 'image')
           .map((feed: any) => ({
             id: feed._id,
-            image: { uri: `https://deploy-backend-z7sw.onrender.com/${feed.contentUrl.replace(/\\/g, '/')}` },
+            image: { uri: `http://192.168.1.14:5000/${feed.contentUrl.replace(/\\/g, '/')}` },
             like: (feed.like ?? 0).toString(),
           }));
 
@@ -226,7 +226,7 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
           .filter((feed: any) => feed.type === 'video')
           .map((feed: any) => ({
             id: feed._id,
-            image: { uri: `https://deploy-backend-z7sw.onrender.com/${feed.contentUrl.replace(/\\/g, '/')}` },
+            image: { uri: `http://192.168.1.14:5000/${feed.contentUrl.replace(/\\/g, '/')}` },
             like: (feed.like ?? 0).toString(),
           }));
 
@@ -276,7 +276,7 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
       }
 
       // Create a proper profile URL (replace with your deployed domain later)
-      const profileUrl = `https://deploy-backend-z7sw.onrender.com/profile/${userId}`;
+      const profileUrl = `http://192.168.1.14:5000/profile/${userId}`;
 
       const result = await Share.share({
         message: `Check out this profile: ${profileUrl}`,
@@ -356,10 +356,13 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
             </View>
             <View style={{ backgroundColor: 'rgba(255, 255, 255, .1)', height: 70, width: 200, borderRadius: 12, marginTop: 20, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', }}>
 
-              <View style={{ alignItems: 'center', width: '50%' }}>
-                <Text style={GlobalStyleSheet.textfont2}>{postCount}</Text>
-                <Text style={GlobalStyleSheet.titlefont}>Post</Text>
-              </View>
+              {activeAccountType === 'Creator' && (
+                <View style={{ alignItems: 'center', width: '50%' }}>
+                  <Text style={GlobalStyleSheet.textfont2}>{postCount}</Text>
+                  <Text style={GlobalStyleSheet.titlefont}>Post</Text>
+                </View>
+              )}
+
               <View style={{ width: '50%' }}>
                 <TouchableOpacity style={{ alignItems: 'center' }}
                   onPress={() => navigation.navigate('Followers')}
@@ -389,17 +392,17 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
 
 
         {/* Show only if Creator */}
-        {activeAccountType==="Creator" && (
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 20 }}>
-          <Followbtn
-            onPress={() => navigation.navigate('Suggestions')}
-            title='professional Dashboard'
-          />
-          <Sharebtn
-            onPress={onShare}
-            title='Share Profile'
-          />
-        </View>
+        {activeAccountType === "Creator" && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 20 }}>
+            <Followbtn
+              onPress={() => navigation.navigate('Suggestions')}
+              title='professional Dashboard'
+            />
+            <Sharebtn
+              onPress={onShare}
+              title='Share Profile'
+            />
+          </View>
         )}
 
 
@@ -480,7 +483,7 @@ const Profile = ({ navigation }: ProfileScreenProps) => {
               {reels.map((data, index) => (
                 <View key={index} style={{ width: '33.33%', padding: 2 }}>
                   <TouchableOpacity
-                     onPress={() => navigation.navigate("ProfilePost")}   // 👈 only navigate
+                    onPress={() => navigation.navigate("ProfilePost")}   // 👈 only navigate
                   >
                     <Image
                       style={{ width: '100%', height: null, aspectRatio: 1 / 1.8 }}

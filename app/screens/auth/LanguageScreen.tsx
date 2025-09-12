@@ -57,7 +57,7 @@ const LanguageScreen: React.FC = () => {
                 const token = await AsyncStorage.getItem("userToken");
 
                 // Send to backend
-                const response = await fetch("https://deploy-backend-z7sw.onrender.com/api/app/language", {
+                const response = await fetch("http://192.168.1.14:5000/api/app/language", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
